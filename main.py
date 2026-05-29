@@ -12,8 +12,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-# Load Server URLs for API Documentation testing (Swagger UI)
-gateway_url = os.getenv("GATEWAY_URL", "http://localhost:18080")
+# Load Server URL for API Documentation testing (Swagger UI)
 backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 @asynccontextmanager
@@ -31,8 +30,7 @@ app = FastAPI(
     },
     lifespan=lifespan,
     servers=[
-        {"url": gateway_url, "description": "API Gateway (DigiRunner)"},
-        {"url": backend_url, "description": "Direct Backend (Restricted)"}
+        {"url": backend_url, "description": "Backend API Server"}
     ]
 )
 

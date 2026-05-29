@@ -15,57 +15,11 @@ services:
       - "8000"
     networks:
       - public_net
-      - app_net
       - db_net
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
-
-  dgr-h2db-detect:
-    container_name: dgr-h2db-detect
-    image: bash
-    volumes:
-      - ./db:/opt/db
-      - shared:/opt/shared
-    networks:
-      - app_net
-    command: |
-      bash -c '
-      cat << EOF > /opt/shared/dgr.args
-      -Xms2g
-      -Xmx4g
-      -DdigiRunner.token.key-store.path=/opt/digirunner/keys
-      -Dserver.port=18080
-      -Dspring.datasource.url=jdbc:h2:/opt/digirunner/db/dgrdb;NON_KEYWORDS=VALUE;Mode=MySQL
-      EOF
-      ls /opt/db/*.db &> /dev/null && echo "-Dspring.sql.init.mode=never" >> /opt/shared/dgr.args || echo "-Dspring.sql.init.mode=always" >> /opt/shared/dgr.args;
-      cat /opt/shared/dgr.args
-      '
-
-  dgr:
-    image: tpisoftwareopensource/digirunner-open-source:release-v4.7.3
-    container_name: dgr-gateway
-    depends_on:
-      magic_pinecone:
-        condition: service_started
-      dgr-h2db-detect:
-        condition: service_completed_successfully
-    expose:
-      - "18080"
-    environment:
-      - TZ=Asia/Taipei
-    command:
-      - "@/opt/shared/dgr.args"
-      - "org.springframework.boot.loader.launch.PropertiesLauncher"
-    volumes:
-      - ./db:/opt/digirunner/db
-      - shared:/opt/shared
-    networks:
-      - public_net
-      - app_net
-    restart: unless-stopped
-
 
 
   db:
@@ -107,7 +61,6 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-      - "18080:18080"
       - "8081:8081"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
@@ -117,21 +70,16 @@ services:
       - public_net
     depends_on:
       - magic_pinecone
-      - dgr
       - adminer
 
 networks:
   public_net:
-    driver: bridge
-  app_net:
     driver: bridge
   db_net:
     driver: bridge
 
 volumes:
   postgres_data:
-    driver: local
-  shared:
     driver: local
   caddy_data:
     driver: local
