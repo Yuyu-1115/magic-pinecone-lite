@@ -263,3 +263,4 @@ async def sync_courses_to_db(db: Session):
     except Exception as e:
         logger.error(f"Error during course sync: {e}")
         db.rollback()
+        raise e
