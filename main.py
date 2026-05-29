@@ -6,7 +6,8 @@ import os
 from routers import test, course, scholarship, auth
 from database.db_connect import engine
 from database.models import Base
-from internal.scheduler import start_scheduler, scheduler
+
+
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -17,11 +18,8 @@ backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    start_scheduler()
     yield
-    # Shutdown
-    scheduler.shutdown()
+
 
 app = FastAPI(
     title='Magic Pinecone Backend API',

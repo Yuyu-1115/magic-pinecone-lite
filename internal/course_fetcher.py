@@ -248,20 +248,13 @@ async def sync_courses_to_db(db: Session):
         from internal.course_detail_fetcher import sync_course_details
         await sync_course_details(db)
 
-        # Sync course embeddings (generate organized descriptions & embeddings)
-        from internal.rag_preprocessor import sync_course_normalizations, sync_course_embeddings
-        try:
-            await sync_course_normalizations(db)
-            await sync_course_embeddings(db)
-        except Exception as e:
-            logger.error(f"Error during RAG embedding sync: {e}")
-
         status = db.query(SystemStatus).filter(SystemStatus.id == 1).first()
         if not status:
             status = SystemStatus(id=1, last_course_sync=datetime.now(timezone.utc))
             db.add(status)
         else:
             status.last_course_sync = datetime.now(timezone.utc)
+
 
         db.commit()
         logger.info("Course synchronization completed successfully.")

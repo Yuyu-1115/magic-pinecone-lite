@@ -9,19 +9,12 @@ class Settings(BaseSettings):
     db_name: str
     db_max_connections: int = 5
 
-    # Gemini Config
-    gemini_api_key: str = ""
-    gemini_llm_model: str = "gemini-2.5-flash"
-    gemini_embedding_model: str = "gemini-embedding-001"
-
-    gemini_llm_rpm_limit: int = 5
-    gemini_embedding_rpm_limit: int = 100
-    gemini_max_embeddings_per_run: int = 900
     # NCU Portal OAuth
     ncu_oauth_client_id: str = ""
     ncu_oauth_client_secret: str = ""
     ncu_oauth_redirect_uri: str = "http://localhost:8000/auth/callback"
     allowed_redirect_origins: str = "http://localhost:5173,http://localhost:3000,http://localhost:18080"
+
 
     # JWT Security
     jwt_secret_key: str
