@@ -4,6 +4,7 @@ import httpx
 import os
 import json
 import re
+import copy
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 from urllib.parse import urlparse, parse_qs
@@ -20,6 +21,7 @@ COURSE_HEADER = {
     'Accept-Language': 'zh-TW',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 }
+DETAIL_URL_TEMPLATE = "https://cis.ncu.edu.tw/Course/main/support/courseDetail.html?crs={}"
 SCHOLARSHIP_URL = 'https://cis.ncu.edu.tw/Scholarship/'
 
 async def fetch_colleges_with_departments():
@@ -150,6 +152,82 @@ async def fetch_all_course_extras():
                 break
     return course_extras
 
+def clean_text_with_newlines(element) -> str:
+    if not element:
+        return ""
+    el_copy = copy.copy(element)
+    for br in el_copy.find_all(['br', 'br/']):
+        br.replace_with('\n')
+        
+    text = el_copy.get_text()
+    lines = []
+    for line in text.split('\n'):
+        line_clean = line.strip()
+        if line_clean == '' and lines and lines[-1] == '':
+            continue
+        lines.append(line_clean)
+        
+    return '\n'.join(lines).strip()
+
+def parse_course_detail(html_content: bytes) -> dict:
+    soup = BeautifulSoup(html_content, 'html.parser')
+    rows = soup.select('table.classBase tr')
+    
+    data = {
+        'objectives': None,
+        'content': None,
+        'books': None,
+        'teaching_method': None,
+        'grading_policy': None
+    }
+    
+    for row in rows:
+        tds = row.find_all('td', recursive=False)
+        if len(tds) < 2:
+            continue
+            
+        title_td = tds[0]
+        value_td = tds[1]
+        title_classes = title_td.get('class', [])
+        if not title_classes or 'subTitle' not in title_classes:
+            continue
+            
+        title = title_td.get_text(strip=True)
+        cleaned_val = clean_text_with_newlines(value_td)
+        
+        if not cleaned_val or cleaned_val.lower() == 'no data':
+            continue
+            
+        if title == '課程目標':
+            data['objectives'] = cleaned_val
+        elif title == '授課內容':
+            data['content'] = cleaned_val
+        elif title == '教科書/參考書':
+            data['books'] = cleaned_val
+        elif title == '授課方式':
+            data['teaching_method'] = cleaned_val
+        elif title in ('評量配分比例', '評量配分比重'):
+            data['grading_policy'] = cleaned_val
+            
+    return data
+
+async def fetch_course_detail(client: httpx.AsyncClient, serial_no: str, semaphore: asyncio.Semaphore) -> dict:
+    url = DETAIL_URL_TEMPLATE.format(serial_no)
+    async with semaphore:
+        for attempt in range(3):
+            try:
+                response = await client.get(url, headers=COURSE_HEADER, timeout=12.0)
+                if response.status_code == 200:
+                    return parse_course_detail(response.content)
+                else:
+                    logger.warning(f"Failed to fetch details for course {serial_no} (HTTP {response.status_code})")
+                    return {}
+            except Exception as e:
+                logger.warning(f"Error fetching course details for {serial_no} (attempt {attempt + 1}): {e}")
+                if attempt < 2:
+                    await asyncio.sleep(1.0 * (attempt + 1))
+        return {}
+
 async def fetch_scholarship_data():
     results = []
     async with httpx.AsyncClient(verify=False) as client:
@@ -265,6 +343,34 @@ async def main():
         with open("dist/courses.json", "w", encoding="utf-8") as f:
             json.dump(course_payload, f, ensure_ascii=False, indent=2)
         logger.info(f"Successfully saved {len(course_list)} course records.")
+        
+        # 3. Fetch Course Details and save to dist/detail/<serial_no>.json
+        logger.info("Fetching and writing individual course details...")
+        os.makedirs("dist/detail", exist_ok=True)
+        
+        semaphore = asyncio.Semaphore(20)  # Concurrency limit of 20
+        async with httpx.AsyncClient(verify=False, timeout=12.0) as client:
+            async def process_detail(course):
+                serial = course.get('serial_no')
+                if not serial:
+                    return
+                file_path = f"dist/detail/{serial}.json"
+                
+                # Fetch fresh details directly (no cache check)
+                detail = await fetch_course_detail(client, serial, semaphore)
+                if detail:
+                    detail_payload = {
+                        "serial_no": serial,
+                        **detail
+                    }
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        json.dump(detail_payload, f, ensure_ascii=False, indent=2)
+            
+            # Execute concurrently for all unique courses
+            tasks = [process_detail(c) for c in course_list]
+            await asyncio.gather(*tasks)
+            
+        logger.info("Successfully fetched and saved all individual course detail JSON files.")
         
     except Exception as e:
         logger.error(f"Error fetching course data: {e}")
