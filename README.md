@@ -57,8 +57,9 @@ If you want to run the scraper manually in your local environment:
 
 ---
 
-## 🎖️ Credits
+## 🎖️ Credits & Disclaimers
 
-This backend logic was built, reviewed, and refined with the help of AI coding assistants:
-- **GitHub Copilot** (for identifying the critical exception handling and data branch overwrite vulnerability during code review).
-- **Antigravity (by Google DeepMind)** (for implementing the bug fixes, optimizing scheduling, and updating the repository configuration).
+- **NCU Course Finder Fetcher**: Core inspiration and scraper logic adapted for fetching NCU course data.
+- **AI-Assisted Development**: This codebase, workflow configuration, and documentation (including this README) were co-authored, reviewed, and refined with the assistance of AI tools:
+  - **GitHub Copilot** (for identifying the critical exception handling and data branch overwrite vulnerability during code review).
+  - **Antigravity (by Google DeepMind)** (for implementing the bug fixes, optimizing scheduling, and updating the repository configuration).
