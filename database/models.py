@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, DateTime, Index, func
 from sqlalchemy.orm import relationship
 from database.db_connect import Base
-from pgvector.sqlalchemy import Vector
 
 
 class College(Base):
+
     __tablename__ = "colleges"
     name = Column(String, primary_key=True, index=True)
 
@@ -41,7 +41,6 @@ class Course(Base):
     department = relationship("Department", back_populates="courses")
     college = relationship("College")
     detail = relationship("CourseDetail", back_populates="course", uselist=False, cascade="all, delete-orphan")
-    course_embedding = relationship("CourseEmbedding", back_populates="course", uselist=False, cascade="all, delete-orphan")
 
 class CourseDetail(Base):
     __tablename__ = "course_details"
@@ -55,29 +54,9 @@ class CourseDetail(Base):
 
     course = relationship("Course", back_populates="detail")
 
-class CourseEmbedding(Base):
-    __tablename__ = "course_embeddings"
-
-    serial_no = Column(String, ForeignKey("courses.serial_no", ondelete="CASCADE"), primary_key=True, index=True)
-    organized_description = Column(Text, nullable=False)
-    embedding = Column(Vector(768), nullable=True)
-
-    course = relationship("Course", back_populates="course_embedding")
-
-    __table_args__ = (
-        Index(
-            "ix_course_embeddings_embedding",
-            "embedding",
-            postgresql_using="hnsw",
-            postgresql_ops={"embedding": "vector_cosine_ops"},
-            postgresql_with={"m": 16, "ef_construction": 64},
-        ),
-    )
-
-
-
 class SystemStatus(Base):
     __tablename__ = "system_status"
+
     id = Column(Integer, primary_key=True, index=True)
     last_course_sync = Column(DateTime(timezone=True), nullable=True)
     last_scholarship_sync = Column(DateTime(timezone=True), nullable=True)

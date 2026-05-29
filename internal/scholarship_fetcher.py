@@ -115,3 +115,4 @@ async def sync_scholarships_to_db(db: Session):
     except Exception as e:
         logger.error(f"Error during scholarship sync: {e}")
         db.rollback()
+        raise e
