@@ -34,6 +34,7 @@ jobs:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          JWT_SECRET_KEY: "dummy_jwt_secret_key_for_workflow_runs"
         run: uv run alembic upgrade head
 
       - name: Run Sync Script
@@ -43,4 +44,5 @@ jobs:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          JWT_SECRET_KEY: "dummy_jwt_secret_key_for_workflow_runs"
         run: uv run python scripts/sync.py

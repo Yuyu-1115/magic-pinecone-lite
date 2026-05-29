@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+from pydantic import model_validator
 
 class Settings(BaseSettings):
     db_user: str
@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     db_name: str
     db_max_connections: int = 5
 
+    # Environment mode
+    app_env: str = "development"
+
     # NCU Portal OAuth
     ncu_oauth_client_id: str = ""
     ncu_oauth_client_secret: str = ""
@@ -17,22 +20,26 @@ class Settings(BaseSettings):
 
 
     # JWT Security
-    jwt_secret_key: str
+    jwt_secret_key: str = "generate_a_secure_random_string_here"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
 
-    @field_validator("jwt_secret_key")
-    @classmethod
-    def validate_jwt_secret_key(cls, v: str) -> str:
+    @model_validator(mode="after")
+    def validate_jwt_secret_key_by_env(self) -> "Settings":
+        v = self.jwt_secret_key
         placeholders = {
             "temporary_secret_key_change_me_in_production",
             "generate_a_secure_random_string_here"
         }
-        if not v or v.strip() == "" or v in placeholders:
+        if not v or v.strip() == "":
             raise ValueError(
-                "JWT_SECRET_KEY is required and cannot be empty or set to a placeholder/default value."
+                "JWT_SECRET_KEY is required and cannot be empty."
             )
-        return v
+        if self.app_env.lower() == "production" and v in placeholders:
+            raise ValueError(
+                "JWT_SECRET_KEY cannot be set to a placeholder/default value in production."
+            )
+        return self
 
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
