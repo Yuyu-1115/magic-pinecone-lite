@@ -8,7 +8,7 @@ Welcome to the **Magic Pinecone Backend**! This is a backend API service project
 
 - **FastAPI Driven**: Provides a modern, high-performance Python web framework design.
 - **PostgreSQL Database**: Supports a relational database for managing models such as courses, departments, and colleges.
-- **Docker Containerization**: Includes the application, database, and Digirunner via `docker-compose`, making infrastructure configuration and deployment effortless.
+- **Docker Containerization**: Includes the application and database via `docker-compose`, making infrastructure configuration and deployment effortless.
 - **Course Finder Fetching**: Built-in functionality for automatically / manually synchronizing the latest course data from the school system.
 - **Scheduling**: Automatically handles background scheduled tasks via `APScheduler`.
 
@@ -36,7 +36,7 @@ The scraper uses `httpx` to retrieve data for each college and department from t
 
 ### Quick Start with Docker (Recommended)
 
-Using Docker Compose is the easiest way to start up. It will launch your Backend API, PostgreSQL database, and Digirunner Gateway by default.
+Using Docker Compose is the easiest way to start up. It will launch your Backend API and PostgreSQL database by default.
 
 1. **Environment Variables Configuration**:
    Copy the example environment variable file and modify it according to your needs.
@@ -52,7 +52,6 @@ Using Docker Compose is the easiest way to start up. It will launch your Backend
 3. **Access the Services**:
    - Backend API Host: `http://localhost:8000`
    - FastAPI (Swagger) Documentation: `http://localhost:8000/docs`
-   - Digirunner Gateway: `http://localhost:18080`
 
 ### Local Development Setup (Without Docker)
 
