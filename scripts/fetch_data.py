@@ -208,7 +208,8 @@ def parse_course_detail(html_content: bytes) -> dict:
             data['teaching_method'] = cleaned_val
         elif title in ('評量配分比例', '評量配分比重'):
             data['grading_policy'] = cleaned_val
-            
+    if not any(data.values()):
+        return {}
     return data
 
 async def fetch_course_detail(client: httpx.AsyncClient, serial_no: str, semaphore: asyncio.Semaphore) -> dict:
