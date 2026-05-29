@@ -1,4 +1,4 @@
-name: Database Synchronization
+name: Data Synchronization
 
 on:
   schedule:
@@ -6,8 +6,8 @@ on:
     - cron: '0 20 * * *'
   workflow_dispatch: # 允許手動觸發
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+permissions:
+  contents: write
 
 jobs:
   sync:
@@ -30,22 +30,17 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Run Database Migrations
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          JWT_SECRET_KEY: "dummy_jwt_secret_key_for_workflow_runs"
-        run: uv run alembic upgrade head
+      - name: Run Scraper Script
+        run: uv run python scripts/fetch_data.py
 
-      - name: Run Sync Script
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          JWT_SECRET_KEY: "dummy_jwt_secret_key_for_workflow_runs"
-        run: uv run python scripts/sync.py
+      - name: Deploy to orphan branch
+        run: |
+          cd dist
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b data
+          git add .
+          git commit -m "Update data: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push -f origin data
