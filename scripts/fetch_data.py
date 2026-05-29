@@ -305,6 +305,7 @@ async def main():
         logger.info(f"Successfully saved {len(scholarships)} scholarship records.")
     except Exception as e:
         logger.error(f"Error fetching scholarships: {e}")
+        raise
 
     # 2. Fetch Course Data
     logger.info("Fetching colleges and departments...")
@@ -374,6 +375,7 @@ async def main():
         
     except Exception as e:
         logger.error(f"Error fetching course data: {e}")
+        raise
 
 if __name__ == "__main__":
     asyncio.run(main())
