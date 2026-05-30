@@ -560,6 +560,9 @@ class _CourseSelectionPageContentState
     setState(() {
       _isPreviewingSharedCourses = restoreState.isPreview;
       _hasUnsavedCourseSelection = false;
+      if (restoreState.isPreview) {
+        _selectedView = _CourseSelectionView.timetable;
+      }
       _selectedCourses
         ..clear()
         ..addEntries(
