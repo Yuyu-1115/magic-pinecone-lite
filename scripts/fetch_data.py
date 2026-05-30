@@ -178,7 +178,8 @@ def parse_course_detail(html_content: bytes) -> dict:
         'content': None,
         'books': None,
         'teaching_method': None,
-        'grading_policy': None
+        'grading_policy': None,
+        'distribution_conditions': []
     }
     
     for row in rows:
@@ -208,6 +209,26 @@ def parse_course_detail(html_content: bytes) -> dict:
             data['teaching_method'] = cleaned_val
         elif title in ('評量配分比例', '評量配分比重'):
             data['grading_policy'] = cleaned_val
+            
+    # Parse distribution conditions (選課分發條件)
+    th_el = soup.find(lambda tag: tag.name == 'th' and '分發條件' in tag.get_text())
+    if th_el:
+        next_tr = th_el.parent.find_next_sibling('tr')
+        if next_tr:
+            cond_table = next_tr.find('table')
+            if cond_table:
+                conditions = []
+                for r in cond_table.find_all('tr')[1:]: # Skip headers
+                    r_tds = r.find_all('td')
+                    if len(r_tds) >= 2:
+                        priority = r_tds[0].get_text(strip=True)
+                        rule = r_tds[1].get_text(strip=True)
+                        conditions.append({
+                            "priority": int(priority) if priority.isdigit() else priority,
+                            "rule": rule
+                        })
+                data['distribution_conditions'] = conditions
+                
     if not any(data.values()):
         return {}
     return data
