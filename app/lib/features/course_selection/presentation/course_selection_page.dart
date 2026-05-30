@@ -15,6 +15,8 @@ import 'package:magic_pinecone_course_demo/features/course_selection/models/cour
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/calendar_item.dart';
+import 'package:magic_pinecone_course_demo/features/settings/presentation/settings_page.dart';
+import 'package:magic_pinecone_course_demo/features/settings/presentation/view_models/settings_view_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CourseSelectionPage extends StatelessWidget {
@@ -23,6 +25,7 @@ class CourseSelectionPage extends StatelessWidget {
     this.controller,
     this.courseSupplementalDetailRepository,
     this.courseSelectionStorage,
+    required this.settingsViewModel,
     this.initialShareCode,
     this.showBackButton = false,
   });
@@ -30,6 +33,7 @@ class CourseSelectionPage extends StatelessWidget {
   final CourseSelectionController? controller;
   final CourseSupplementalDetailRepository? courseSupplementalDetailRepository;
   final CourseSelectionStorage? courseSelectionStorage;
+  final SettingsViewModel settingsViewModel;
   final String? initialShareCode;
   final bool showBackButton;
 
@@ -51,6 +55,7 @@ class CourseSelectionPage extends StatelessWidget {
         controller: controller,
         supplementalDetailRepository: supplementalDetailRepository,
         courseSelectionStorage: courseSelectionStorage,
+        settingsViewModel: settingsViewModel,
         initialShareCode: initialShareCode,
         showBackButton: showBackButton,
       ),
@@ -58,7 +63,7 @@ class CourseSelectionPage extends StatelessWidget {
   }
 }
 
-enum _CourseSelectionView { search, timetable }
+enum _CourseSelectionView { search, timetable, settings }
 
 enum _CourseTypeFilter { all, required, elective }
 
@@ -69,6 +74,7 @@ class _CourseSelectionPageContent extends StatefulWidget {
     required this.controller,
     required this.supplementalDetailRepository,
     required this.courseSelectionStorage,
+    required this.settingsViewModel,
     required this.initialShareCode,
     required this.showBackButton,
   });
@@ -76,6 +82,7 @@ class _CourseSelectionPageContent extends StatefulWidget {
   final CourseSelectionController controller;
   final CourseSupplementalDetailRepository supplementalDetailRepository;
   final CourseSelectionStorage courseSelectionStorage;
+  final SettingsViewModel settingsViewModel;
   final String? initialShareCode;
   final bool showBackButton;
 
@@ -152,17 +159,9 @@ class _CourseSelectionPageContentState
   }) {
     return Scaffold(
       appBar: AppBar(
-        leading: widget.showBackButton
-            ? const BackButton()
-            : Builder(
-                builder: (context) => IconButton(
-                  tooltip: '切換課程工具',
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                  icon: const Icon(Icons.menu),
-                ),
-              ),
+        leading: widget.showBackButton ? const BackButton() : null,
         title: const Text(
-          '課程查詢',
+          '神奇松果 Lite',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -176,29 +175,6 @@ class _CourseSelectionPageContentState
             ),
         ],
       ),
-      drawer: Builder(
-        builder: (drawerContext) => NavigationDrawer(
-          selectedIndex: _selectedView.index,
-          onDestinationSelected: (index) {
-            Navigator.of(drawerContext).pop();
-            setState(() {
-              _selectedView = _CourseSelectionView.values[index];
-            });
-          },
-          children: const [
-            SizedBox(height: 12.0),
-            NavigationDrawerDestination(
-              icon: Icon(Icons.search),
-              label: Text('課程查詢'),
-            ),
-            NavigationDrawerDestination(
-              icon: Icon(Icons.calendar_month_outlined),
-              selectedIcon: Icon(Icons.calendar_month),
-              label: Text('課表'),
-            ),
-          ],
-        ),
-      ),
       body: switch (_selectedView) {
         _CourseSelectionView.search => _buildCourseSearchView(
           displayedCourses,
@@ -208,6 +184,10 @@ class _CourseSelectionPageContentState
         _CourseSelectionView.timetable => _buildTimetableView(
           context,
           useDesktopDialog: useDesktopCourseDetails,
+        ),
+        _CourseSelectionView.settings => SettingsPage(
+          viewModel: widget.settingsViewModel,
+          showAppBar: false,
         ),
       },
       floatingActionButton:
@@ -219,6 +199,27 @@ class _CourseSelectionPageContentState
               child: const Icon(Icons.save_outlined),
             )
           : null,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedView.index,
+        onDestinationSelected: (index) {
+          setState(() {
+            _selectedView = _CourseSelectionView.values[index];
+          });
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.search), label: '課程查詢'),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: '課表',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: '設定',
+          ),
+        ],
+      ),
     );
   }
 
@@ -232,7 +233,7 @@ class _CourseSelectionPageContentState
       appBar: AppBar(
         automaticallyImplyLeading: widget.showBackButton,
         title: const Text(
-          '課程查詢',
+          '神奇松果 Lite',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -242,6 +243,11 @@ class _CourseSelectionPageContentState
                 ? null
                 : () => unawaited(controller.search()),
             icon: const Icon(Icons.refresh),
+          ),
+          IconButton(
+            tooltip: '設定',
+            onPressed: () => _showSettingsDialog(context),
+            icon: const Icon(Icons.settings_outlined),
           ),
         ],
       ),
@@ -262,6 +268,16 @@ class _CourseSelectionPageContentState
           ),
           Expanded(child: _buildTimetableView(context, useDesktopDialog: true)),
         ],
+      ),
+    );
+  }
+
+  void _showSettingsDialog(BuildContext context) {
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (context) =>
+            SettingsDialog(viewModel: widget.settingsViewModel),
       ),
     );
   }

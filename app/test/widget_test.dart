@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:magic_pinecone_course_demo/core/app/app_theme.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_repository.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_page.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
+import 'package:magic_pinecone_course_demo/features/settings/data/settings_repository.dart';
+import 'package:magic_pinecone_course_demo/features/settings/presentation/view_models/settings_view_model.dart';
 
 void main() {
   testWidgets('shows the course selection app shell', (tester) async {
@@ -25,14 +28,43 @@ void main() {
       ),
     );
     addTearDown(controller.dispose);
+    final themeController = AppThemeController();
+    addTearDown(themeController.dispose);
+    final settingsViewModel = SettingsViewModel(
+      appThemeController: themeController,
+      repository: const StaticSettingsRepository(),
+    );
+    addTearDown(settingsViewModel.dispose);
 
     await tester.pumpWidget(
-      MaterialApp(home: CourseSelectionPage(controller: controller)),
+      ValueListenableBuilder<ThemeMode>(
+        valueListenable: themeController,
+        builder: (context, themeMode, _) => MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: themeMode,
+          home: CourseSelectionPage(
+            controller: controller,
+            settingsViewModel: settingsViewModel,
+          ),
+        ),
+      ),
     );
     await tester.pump();
 
     expect(find.text('課程查詢'), findsWidgets);
     expect(find.text('程式設計'), findsOneWidget);
+
+    await tester.tap(find.text('設定'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('神奇松果 Lite'), findsWidgets);
+    expect(find.text('深色模式'), findsOneWidget);
+
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+
+    expect(themeController.value, ThemeMode.dark);
   });
 }
 
