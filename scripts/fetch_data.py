@@ -289,6 +289,58 @@ async def fetch_scholarship_data():
             })
     return results
 
+async def fetch_current_semester() -> str:
+    """從關鍵字查詢頁面取得目前系統預設的學年度與學期，並組合為例如 '115-1' 的格式。
+    若解析失敗，則使用基於目前日期的推估值作為 Fallback，以確保爬蟲不中斷。
+    """
+    async with httpx.AsyncClient(verify=False) as client:
+        try:
+            response = await client.get('https://cis.ncu.edu.tw/Course/main/query/byKeywords', headers=COURSE_HEADER)
+            if response.status_code != 200:
+                raise Exception(f"HTTP status code {response.status_code}")
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # 取得學年度 (例如 '115')
+            year_select = soup.find('select', {'id': 'year'}) or soup.find('select', {'name': 'year'})
+            year = None
+            if year_select:
+                selected_opt = year_select.find('option', selected=True)
+                if selected_opt:
+                    year = selected_opt.get('value')
+            
+            # 取得學期 (例如 '1' 代表上學期，'2' 代表下學期)
+            term_select = soup.find('select', {'id': 'fall_spring'}) or soup.find('select', {'name': 'fall_spring'})
+            term = None
+            if term_select:
+                selected_opt = term_select.find('option', selected=True)
+                if selected_opt:
+                    term = selected_opt.get('value')
+            
+            if year and term:
+                return f"{year}-{term}"
+            else:
+                raise Exception(f"Could not parse year ({year}) or term ({term})")
+        except Exception as e:
+            logger.error(f"Error fetching current semester from NCU website: {e}")
+            # Fallback 計算
+            now = datetime.now()
+            roc_year = now.year - 1911
+            # 5月後陸續開放下一學年度第一學期選課，1月算第一學期，其他算第二學期
+            if now.month >= 5:
+                est_year = roc_year
+                est_term = "1"
+            elif now.month == 1:
+                est_year = roc_year - 1
+                est_term = "1"
+            else:
+                est_year = roc_year - 1
+                est_term = "2"
+            
+            fallback_semester = f"{est_year}-{est_term}"
+            logger.warning(f"Using estimated fallback semester: {fallback_semester}")
+            return fallback_semester
+
 async def main():
     logger.info("Starting synchronization scrape process...")
     os.makedirs("dist", exist_ok=True)
@@ -311,6 +363,17 @@ async def main():
     # 2. Fetch Course Data
     logger.info("Fetching colleges and departments...")
     try:
+        # Get active semester first
+        semester = await fetch_current_semester()
+        logger.info(f"Detected current semester: {semester}")
+        
+        # Write semester to temporary file for GitHub Actions
+        with open("dist/semester.txt", "w", encoding="utf-8") as f:
+            f.write(semester)
+        
+        # Split semester to get year and term values
+        year_val, term_val = semester.split("-")
+        
         colleges = await fetch_colleges_with_departments()
         logger.info(f"Fetched {len(colleges)} colleges.")
         
@@ -340,6 +403,8 @@ async def main():
         course_list = list(unique_courses.values())
         course_payload = {
             "last_updated": datetime.now(timezone.utc).isoformat(),
+            "academic_year": year_val,
+            "semester": term_val,
             "courses": course_list
         }
         with open("dist/courses.json", "w", encoding="utf-8") as f:
@@ -348,7 +413,8 @@ async def main():
         
         # 3. Fetch Course Details and save to dist/detail/<serial_no>.json
         logger.info("Fetching and writing individual course details...")
-        os.makedirs("dist/detail", exist_ok=True)
+        detail_dir = "dist/detail"
+        os.makedirs(detail_dir, exist_ok=True)
         
         semaphore = asyncio.Semaphore(20)  # Concurrency limit of 20
         async with httpx.AsyncClient(verify=False, timeout=12.0) as client:
@@ -356,7 +422,7 @@ async def main():
                 serial = course.get('serial_no')
                 if not serial:
                     return
-                file_path = f"dist/detail/{serial}.json"
+                file_path = f"{detail_dir}/{serial}.json"
                 
                 # Fetch fresh details directly (no cache check)
                 detail = await fetch_course_detail(client, serial, semaphore)
