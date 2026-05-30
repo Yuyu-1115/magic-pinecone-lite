@@ -1,0 +1,61 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/data/course_repository.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_page.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
+
+void main() {
+  testWidgets('shows the course selection app shell', (tester) async {
+    final controller = CourseSelectionController(
+      repository: _FakeCourseRepository(
+        result: const CourseSearchResult(
+          totalCount: 1,
+          courses: [
+            CourseItem(
+              serialNo: '00001',
+              classNo: 'CS1001',
+              title: '程式設計',
+              credit: 3,
+              teachers: ['王小明'],
+              classTimes: ['1-1'],
+            ),
+          ],
+        ),
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: CourseSelectionPage(controller: controller)),
+    );
+    await tester.pump();
+
+    expect(find.text('課程查詢'), findsWidgets);
+    expect(find.text('程式設計'), findsOneWidget);
+  });
+}
+
+class _FakeCourseRepository implements CourseRepository {
+  const _FakeCourseRepository({required this.result});
+
+  final CourseSearchResult result;
+
+  @override
+  Future<CourseSearchResult> searchCourses({
+    String? keyword,
+    String? classNo,
+    String? serialNo,
+    String? departmentName,
+    String? collegeName,
+    String? instructor,
+    String? courseType,
+    List<int>? credits,
+    bool? hasVacancy,
+    List<String>? classTimes,
+    int offset = 0,
+    int limit = 100,
+  }) async {
+    return result;
+  }
+}

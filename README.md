@@ -1,17 +1,21 @@
-# Magic Pinecone Backend Light 🌲
+# Magic Pinecone Lite 🌲
 
-Welcome to the **Magic Pinecone Backend Light** repository! 
+Welcome to the **Magic Pinecone Lite** repository!
 
-This repository is built as a **serverless static data pipeline**. It runs automatically using GitHub Actions to scrape and format campus data from National Central University (NCU), publishing the resulting clean JSON payloads directly to dedicated Git branches.
+This repository is built around two lightweight pieces:
+
+- `app/`: a Flutter web app that exposes only the course selection experience from Magic Pinecone.
+- `scripts/`: a serverless static data pipeline that scrapes and formats campus data from National Central University (NCU), publishing clean JSON payloads directly to dedicated Git branches.
 
 ## 🚀 How it Works
 
-1. **Automatic Scraping**: GitHub Actions automatically triggers the scraper script (`scripts/fetch_data.py`) **every 10 minutes** (optimized for capturing rapid changes during the peak course selection periods).
-2. **Robust Exception Handling**: The scraper is configured to propagate errors. If a core category fetch (scholarship or course list) fails, the execution terminates with a non-zero exit status code, causing the GitHub Action to fail and preventing the publishing of incomplete data. Minor errors (such as individual course detail fetch failures) are gracefully tolerated.
-3. **Dynamic Branch Hosting**: 
+1. **Flutter Web App**: GitHub Actions builds `app/` and deploys it to GitHub Pages with the `/magic-pinecone-lite/` base path.
+2. **Automatic Scraping**: GitHub Actions automatically triggers the scraper script (`scripts/fetch_data.py`) **every 10 minutes** (optimized for capturing rapid changes during the peak course selection periods).
+3. **Robust Exception Handling**: The scraper is configured to propagate errors. If a core category fetch (scholarship or course list) fails, the execution terminates with a non-zero exit status code, causing the GitHub Action to fail and preventing the publishing of incomplete data. Minor errors (such as individual course detail fetch failures) are gracefully tolerated.
+4. **Dynamic Branch Hosting**:
    - **Scholarships**: Force-pushed directly to a dedicated branch named `data-scholarship`.
    - **Courses**: The scraper automatically parses the current active semester (e.g. `115-1`) and force-pushes the corresponding course data directly to a branch named after the semester (e.g. `115-1`).
-4. **Static CDN Access**: The resulting JSON files are hosted directly and completely for free via GitHub's CDN.
+5. **Static CDN Access**: The resulting JSON files are hosted directly and completely for free via GitHub's CDN.
 
 ---
 
