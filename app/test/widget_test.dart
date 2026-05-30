@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:magic_pinecone_course_demo/core/app/app_theme.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_repository.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_codec.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_page.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
@@ -83,6 +84,60 @@ void main() {
 
     expect(find.text('週六'), findsOneWidget);
     expect(find.text('週日'), findsOneWidget);
+  });
+
+  testWidgets('shared course links open the mobile timetable view', (
+    tester,
+  ) async {
+    final controller = CourseSelectionController(
+      repository: _FakeCourseRepository(
+        result: const CourseSearchResult(
+          totalCount: 1,
+          courses: [
+            CourseItem(
+              serialNo: '00001',
+              classNo: 'CS1001',
+              title: '程式設計',
+              credit: 3,
+              teachers: ['王小明'],
+              classTimes: ['1-1'],
+            ),
+          ],
+        ),
+      ),
+    );
+    addTearDown(controller.dispose);
+    final themeController = AppThemeController();
+    addTearDown(themeController.dispose);
+    final settingsViewModel = SettingsViewModel(
+      appThemeController: themeController,
+      repository: const StaticSettingsRepository(),
+    );
+    addTearDown(settingsViewModel.dispose);
+    final shareCode = const CourseShareCodec().encodeSerialNos(['00001']);
+
+    await tester.pumpWidget(
+      ValueListenableBuilder<ThemeMode>(
+        valueListenable: themeController,
+        builder: (context, themeMode, _) => MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: themeMode,
+          home: CourseSelectionPage(
+            controller: controller,
+            initialShareCode: shareCode,
+            settingsViewModel: settingsViewModel,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final navigationBar = tester.widget<NavigationBar>(
+      find.byType(NavigationBar),
+    );
+    expect(navigationBar.selectedIndex, 1);
+    expect(find.text('分享課表'), findsOneWidget);
   });
 }
 
