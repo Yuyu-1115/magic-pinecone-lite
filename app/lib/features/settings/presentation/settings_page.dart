@@ -134,12 +134,54 @@ class _SettingsPageContent extends StatelessWidget {
             const SizedBox(height: 20.0),
             child!,
             const SizedBox(height: 20.0),
+            const _OriginSection(),
+            const SizedBox(height: 20.0),
             const _CommunitySection(),
             const SizedBox(height: 24.0),
             const _LicenseFooter(),
           ],
         );
       },
+    );
+  }
+}
+
+class _OriginSection extends StatelessWidget {
+  const _OriginSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '緣起',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 10.0),
+        SizedBox(
+          width: double.infinity,
+          child: Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                '待補',
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
