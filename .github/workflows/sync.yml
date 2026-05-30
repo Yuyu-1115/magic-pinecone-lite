@@ -1,9 +1,6 @@
 name: Data Synchronization
 
 on:
-  push:
-    branches:
-      - master
   schedule:
     # 選課期間每小時執行一次
     - cron: "0 * * * *"
