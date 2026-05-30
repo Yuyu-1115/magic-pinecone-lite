@@ -1,9 +1,9 @@
 name: Data Synchronization
 
 on:
-  schedule:
-    # 選課期間每 10 分鐘執行一次
-    - cron: '*/10 * * * *'
+  push:
+    branches:
+      - master
   workflow_dispatch: # 允許手動觸發
 
 permissions:
