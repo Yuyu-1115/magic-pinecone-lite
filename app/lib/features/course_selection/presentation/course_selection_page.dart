@@ -10,6 +10,7 @@ import 'package:magic_pinecone_course_demo/features/course_selection/data/course
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_schedule_repository.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_selection_storage.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_codec.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_url.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_supplemental_detail_catalog.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_detail_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
@@ -519,11 +520,7 @@ class _CourseSelectionPageContentState
 
   Uri _selectedCourseShareUrl() {
     final code = _selectedCourseShareCode();
-    return Uri.base.replace(
-      path: '/magic-pinecone-lite',
-      queryParameters: {'c': code},
-      fragment: '',
-    );
+    return buildCourseShareUrl(baseUri: Uri.base, code: code);
   }
 
   String _selectedCourseShareCode() {
