@@ -134,9 +134,9 @@ class _SettingsPageContent extends StatelessWidget {
             const SizedBox(height: 20.0),
             child!,
             const SizedBox(height: 20.0),
-            const _OriginSection(),
-            const SizedBox(height: 20.0),
             const _CommunitySection(),
+            const SizedBox(height: 20.0),
+            const _SpecialThanksSection(),
             const SizedBox(height: 24.0),
             const _LicenseFooter(),
           ],
@@ -146,8 +146,8 @@ class _SettingsPageContent extends StatelessWidget {
   }
 }
 
-class _OriginSection extends StatelessWidget {
-  const _OriginSection();
+class _SpecialThanksSection extends StatelessWidget {
+  const _SpecialThanksSection();
 
   @override
   Widget build(BuildContext context) {
@@ -157,7 +157,7 @@ class _OriginSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '緣起',
+          '特別感謝',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -165,20 +165,13 @@ class _OriginSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10.0),
-        SizedBox(
-          width: double.infinity,
-          child: Card(
-            margin: EdgeInsets.zero,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                '待補',
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.5,
-                ),
-              ),
-            ),
+        const Card(
+          margin: EdgeInsets.zero,
+          child: _CommunityTile(
+            icon: Icon(Icons.volunteer_activism_outlined),
+            title: 'OpenTPI（昕力資訊）',
+            subtitle: '與昕力資訊 OpenTPI 開源專案計畫於2025-2026年度的合作，是促成神奇松果的起點。',
+            url: 'https://www.tpisoftware.com/',
           ),
         ),
       ],
@@ -197,7 +190,7 @@ class _CommunitySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '追蹤神奇松果',
+          '追蹤神奇松果 & GDGoC NCU',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -219,14 +212,14 @@ class _CommunitySection extends StatelessWidget {
               _CommunityTile(
                 icon: FaIcon(FontAwesomeIcons.instagram),
                 title: 'Instagram',
-                subtitle: '追蹤我們的IG，獲得最新的活動資訊！',
+                subtitle: '追蹤GDGoC NCU的IG，獲得最新的活動資訊！',
                 url: 'https://www.instagram.com/gdscncu/',
               ),
               Divider(height: 1.0),
               _CommunityTile(
                 icon: FaIcon(FontAwesomeIcons.facebook),
                 title: 'Facebook',
-                subtitle: '追蹤我們的FB粉專，獲得最新的活動資訊！',
+                subtitle: '追蹤GDGoC NCU的FB粉專，獲得最新的活動資訊！',
                 url: 'https://www.facebook.com/GDSCNCU',
               ),
             ],
