@@ -94,14 +94,28 @@ class _SettingsPageContent extends StatelessWidget {
             const SizedBox(height: 10.0),
             Card(
               margin: EdgeInsets.zero,
-              child: SwitchListTile(
-                title: const Text('深色模式'),
-                subtitle: Text(isDarkMode ? '開啟' : '關閉'),
-                secondary: Icon(
-                  isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                ),
-                value: isDarkMode,
-                onChanged: viewModel.setDarkMode,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: const Text('深色模式'),
+                    subtitle: Text(isDarkMode ? '開啟' : '關閉'),
+                    secondary: Icon(
+                      isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    ),
+                    value: isDarkMode,
+                    onChanged: viewModel.setDarkMode,
+                  ),
+                  const Divider(height: 1.0),
+                  SwitchListTile(
+                    title: const Text('隱藏週末'),
+                    subtitle: Text(
+                      viewModel.omitWeekendsOnTimetable ? '只顯示週一到週五' : '顯示整週',
+                    ),
+                    secondary: const Icon(Icons.weekend_outlined),
+                    value: viewModel.omitWeekendsOnTimetable,
+                    onChanged: viewModel.setOmitWeekendsOnTimetable,
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20.0),

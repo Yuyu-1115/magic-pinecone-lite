@@ -122,7 +122,7 @@ class _CourseSelectionPageContentState
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: controller,
+      listenable: Listenable.merge([controller, widget.settingsViewModel]),
       builder: (context, _) {
         if (controller.isLoading && controller.courses.isEmpty) {
           _courseScheduledCoursesCache.clear();
@@ -286,7 +286,7 @@ class _CourseSelectionPageContentState
     BuildContext context, {
     required bool useDesktopDialog,
   }) {
-    final snapshot = _syncedScheduleSnapshot();
+    final snapshot = _visibleScheduleSnapshot();
     return _CourseTimetableView(
       snapshot: snapshot,
       totalCredits: _selectedTotalCredits,
@@ -624,6 +624,19 @@ class _CourseSelectionPageContentState
       courses: [...baseSchedule.courses, ...syncedCourses],
       weekDays: baseSchedule.weekDays,
       periods: baseSchedule.periods,
+    );
+  }
+
+  CourseScheduleSnapshot _visibleScheduleSnapshot() {
+    final snapshot = _syncedScheduleSnapshot();
+    if (!widget.settingsViewModel.omitWeekendsOnTimetable) return snapshot;
+
+    return CourseScheduleSnapshot(
+      courses: snapshot.courses
+          .where((course) => course.dayIndex < 5)
+          .toList(growable: false),
+      weekDays: snapshot.weekDays.take(5).toList(growable: false),
+      periods: snapshot.periods,
     );
   }
 
@@ -968,9 +981,12 @@ class _CourseTimetableView extends StatelessWidget {
 
   static const _periodColumnWidth = 34.0;
   static const _maxDayColumnWidth = 118.0;
-  static const _rowHeight = 48.0;
+  static const _minRowHeight = 30.0;
+  static const _maxRowHeight = 48.0;
   static const _gridGap = 6.0;
   static const _headerHeight = 32.0;
+  static const _topPadding = 58.0;
+  static const _bottomPadding = 12.0;
 
   final CourseScheduleSnapshot snapshot;
   final int totalCredits;
@@ -1004,12 +1020,28 @@ class _CourseTimetableView extends StatelessWidget {
                     _periodColumnWidth +
                     snapshot.weekDays.length * dayColumnWidth +
                     totalGapWidth;
-                final gridHeight =
-                    snapshot.periods.length * _rowHeight +
+                final totalPeriodGapHeight =
                     (snapshot.periods.length - 1) * _gridGap;
+                final availableGridHeight =
+                    constraints.maxHeight -
+                    _topPadding -
+                    _bottomPadding -
+                    _headerHeight -
+                    _gridGap;
+                final rowHeight =
+                    ((availableGridHeight - totalPeriodGapHeight) /
+                            snapshot.periods.length)
+                        .clamp(_minRowHeight, _maxRowHeight);
+                final gridHeight =
+                    snapshot.periods.length * rowHeight + totalPeriodGapHeight;
 
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(12.0, 58.0, 12.0, 20.0),
+                  padding: const EdgeInsets.fromLTRB(
+                    12.0,
+                    _topPadding,
+                    12.0,
+                    _bottomPadding,
+                  ),
                   child: Center(
                     child: SizedBox(
                       width: totalWidth,
@@ -1029,7 +1061,7 @@ class _CourseTimetableView extends StatelessWidget {
                               _TimetablePeriods(
                                 periods: snapshot.periods,
                                 width: _periodColumnWidth,
-                                rowHeight: _rowHeight,
+                                rowHeight: rowHeight,
                                 gap: _gridGap,
                               ),
                               SizedBox(
@@ -1041,14 +1073,14 @@ class _CourseTimetableView extends StatelessWidget {
                                       dayCount: snapshot.weekDays.length,
                                       periodCount: snapshot.periods.length,
                                       dayColumnWidth: dayColumnWidth,
-                                      rowHeight: _rowHeight,
+                                      rowHeight: rowHeight,
                                       gap: _gridGap,
                                     ),
                                     for (final course in snapshot.courses)
                                       _PositionedScheduledCourse(
                                         course: course,
                                         dayColumnWidth: dayColumnWidth,
-                                        rowHeight: _rowHeight,
+                                        rowHeight: rowHeight,
                                         gap: _gridGap,
                                         onTap: onCourseTap,
                                       ),

@@ -55,16 +55,34 @@ void main() {
     expect(find.text('課程查詢'), findsWidgets);
     expect(find.text('程式設計'), findsOneWidget);
 
+    await tester.tap(find.text('課表'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('週六'), findsNothing);
+    expect(find.text('週日'), findsNothing);
+
     await tester.tap(find.text('設定'));
     await tester.pumpAndSettle();
 
     expect(find.text('神奇松果 Lite'), findsWidgets);
     expect(find.text('深色模式'), findsOneWidget);
+    expect(find.text('隱藏週末'), findsOneWidget);
 
-    await tester.tap(find.byType(SwitchListTile));
+    await tester.tap(find.widgetWithText(SwitchListTile, '深色模式'));
     await tester.pumpAndSettle();
 
     expect(themeController.value, ThemeMode.dark);
+
+    await tester.tap(find.widgetWithText(SwitchListTile, '隱藏週末'));
+    await tester.pumpAndSettle();
+
+    expect(settingsViewModel.omitWeekendsOnTimetable, isFalse);
+
+    await tester.tap(find.text('課表'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('週六'), findsOneWidget);
+    expect(find.text('週日'), findsOneWidget);
   });
 }
 

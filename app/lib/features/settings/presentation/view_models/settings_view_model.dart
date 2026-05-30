@@ -14,15 +14,23 @@ class SettingsViewModel extends ChangeNotifier {
 
   final AppThemeController _appThemeController;
   late final SettingsSnapshot _snapshot;
+  bool _omitWeekendsOnTimetable = true;
 
   String get appName => _snapshot.appName;
   String get appVersion => _snapshot.appVersion;
   String get summary => _snapshot.summary;
   List<SettingsStatusItem> get statusItems => _snapshot.statusItems;
   ThemeMode get themeMode => _appThemeController.value;
+  bool get omitWeekendsOnTimetable => _omitWeekendsOnTimetable;
 
   void setDarkMode(bool enabled) {
     _appThemeController.setDarkMode(enabled);
+  }
+
+  void setOmitWeekendsOnTimetable(bool enabled) {
+    if (_omitWeekendsOnTimetable == enabled) return;
+    _omitWeekendsOnTimetable = enabled;
+    notifyListeners();
   }
 
   void _onThemeChanged() {
