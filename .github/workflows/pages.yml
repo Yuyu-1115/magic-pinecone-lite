@@ -1,13 +1,9 @@
 name: Deploy Flutter Web App
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - "app/**"
-      - ".github/workflows/pages.yml"
   workflow_dispatch:
+  push:
+    tags: ["v*.*.*"]
 
 permissions:
   contents: read

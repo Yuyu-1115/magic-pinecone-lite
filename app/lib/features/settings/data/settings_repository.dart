@@ -11,13 +11,13 @@ class StaticSettingsRepository implements SettingsRepository {
   SettingsSnapshot loadSettings() {
     return const SettingsSnapshot(
       appName: '神奇松果 Lite',
-      appVersion: '0.1.0+1',
+      appVersion: '0.1.0',
       summary:
-          '這個 demo 只保留課程查詢與課表規劃，透過 GitHub Pages 提供前端，並直接讀取 magic-pinecone-lite 的靜態課程 JSON。',
+          '神奇松果是由學生社群 Google Developers on Campus NCU 正在開發中的軟體。期望能夠將零碎的校務資訊、分散的系統功能整合起來，為中大學生提供一個一站式的服務。目前提供以下功能：',
       statusItems: [
-        SettingsStatusItem(label: '課程資料由 GitHub CDN 上的靜態 JSON 載入'),
-        SettingsStatusItem(label: '課程查詢、進階篩選與課表預覽已獨立成 Lite 版本'),
-        SettingsStatusItem(label: '課表分享與本機儲存使用瀏覽器能力完成'),
+        SettingsStatusItem(label: '定期同步最新課程資訊'),
+        SettingsStatusItem(label: '在本機儲存選課資訊，並支援與他人分享'),
+        SettingsStatusItem(label: '基本的RWD，手機電腦皆適用'),
       ],
     );
   }

@@ -1,6 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:magic_pinecone_course_demo/features/settings/models/settings_models.dart';
 import 'package:magic_pinecone_course_demo/features/settings/presentation/view_models/settings_view_model.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+Future<void> _launchCommunityUrl(BuildContext context, String url) async {
+  final launched = await launchUrl(Uri.parse(url), webOnlyWindowName: '_blank');
+  if (launched || !context.mounted) return;
+
+  ScaffoldMessenger.maybeOf(
+    context,
+  )?.showSnackBar(SnackBar(content: Text('無法開啟連結：$url')));
+}
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({
@@ -120,9 +133,115 @@ class _SettingsPageContent extends StatelessWidget {
             ),
             const SizedBox(height: 20.0),
             child!,
+            const SizedBox(height: 20.0),
+            const _CommunitySection(),
+            const SizedBox(height: 24.0),
+            const _LicenseFooter(),
           ],
         );
       },
+    );
+  }
+}
+
+class _CommunitySection extends StatelessWidget {
+  const _CommunitySection();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '追蹤神奇松果',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 10.0),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Column(
+            children: const [
+              _CommunityTile(
+                icon: FaIcon(FontAwesomeIcons.github),
+                title: 'GitHub',
+                subtitle: '追蹤神奇松果的進度或是參與開發，點個 Star 也不錯！:D',
+                url: 'https://github.com/magic-pinecone/magic-pinecone-lite',
+              ),
+              Divider(height: 1.0),
+              _CommunityTile(
+                icon: FaIcon(FontAwesomeIcons.instagram),
+                title: 'Instagram',
+                subtitle: '追蹤我們的IG，獲得最新的活動資訊！',
+                url: 'https://www.instagram.com/gdscncu/',
+              ),
+              Divider(height: 1.0),
+              _CommunityTile(
+                icon: FaIcon(FontAwesomeIcons.facebook),
+                title: 'Facebook',
+                subtitle: '追蹤我們的FB粉專，獲得最新的活動資訊！',
+                url: 'https://www.facebook.com/GDSCNCU',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CommunityTile extends StatelessWidget {
+  const _CommunityTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.url,
+  });
+
+  final Widget icon;
+  final String title;
+  final String subtitle;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ListTile(
+      leading: IconTheme(
+        data: IconThemeData(color: colorScheme.primary, size: 22.0),
+        child: icon,
+      ),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.open_in_new),
+      onTap: () => unawaited(_launchCommunityUrl(context, url)),
+    );
+  }
+}
+
+class _LicenseFooter extends StatelessWidget {
+  const _LicenseFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: colorScheme.onSurfaceVariant,
+      height: 1.4,
+    );
+
+    return Text(
+      'Licensed under the MIT License\n'
+      'Copyright (c) 2026 Yu-Hsiang Lin, Yi-Chung Chang and Jing-Lun Huang\n@GDGoC NCU\n'
+      'This project is neither affiliated nor endorsed by National Central University.',
+      textAlign: TextAlign.center,
+      style: textStyle,
     );
   }
 }
