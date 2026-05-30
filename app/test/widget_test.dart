@@ -139,6 +139,78 @@ void main() {
     expect(navigationBar.selectedIndex, 1);
     expect(find.text('分享課表'), findsOneWidget);
   });
+
+  testWidgets('course detail sheet updates sync action label after toggling', (
+    tester,
+  ) async {
+    final controller = CourseSelectionController(
+      repository: _FakeCourseRepository(
+        result: const CourseSearchResult(
+          totalCount: 1,
+          courses: [
+            CourseItem(
+              serialNo: '00001',
+              classNo: 'CS1001',
+              title: '程式設計',
+              credit: 3,
+              teachers: ['王小明'],
+              classTimes: ['1-1'],
+            ),
+          ],
+        ),
+      ),
+    );
+    addTearDown(controller.dispose);
+    final themeController = AppThemeController();
+    addTearDown(themeController.dispose);
+    final settingsViewModel = SettingsViewModel(
+      appThemeController: themeController,
+      repository: const StaticSettingsRepository(),
+    );
+    addTearDown(settingsViewModel.dispose);
+
+    await tester.pumpWidget(
+      ValueListenableBuilder<ThemeMode>(
+        valueListenable: themeController,
+        builder: (context, themeMode, _) => MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: themeMode,
+          home: CourseSelectionPage(
+            controller: controller,
+            settingsViewModel: settingsViewModel,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('程式設計'));
+    await tester.pumpAndSettle();
+
+    final detailSheet = find.byType(BottomSheet);
+    Finder syncButton(String label) {
+      return find.descendant(
+        of: detailSheet,
+        matching: find.widgetWithText(FilledButton, label),
+      );
+    }
+
+    expect(syncButton('加入'), findsOneWidget);
+    expect(syncButton('移除'), findsNothing);
+
+    await tester.tap(syncButton('加入'));
+    await tester.pumpAndSettle();
+
+    expect(syncButton('加入'), findsNothing);
+    expect(syncButton('移除'), findsOneWidget);
+
+    await tester.tap(syncButton('移除'));
+    await tester.pumpAndSettle();
+
+    expect(syncButton('加入'), findsOneWidget);
+    expect(syncButton('移除'), findsNothing);
+  });
 }
 
 class _FakeCourseRepository implements CourseRepository {

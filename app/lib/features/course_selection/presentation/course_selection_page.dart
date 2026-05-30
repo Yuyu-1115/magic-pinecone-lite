@@ -342,6 +342,8 @@ class _CourseSelectionPageContentState
             course: course,
             supplementalDetail: widget.supplementalDetailRepository
                 .findBySerialNo(course.serialNo),
+            toggleCourseSelection: _toggleCourseSelection,
+            isCourseSelected: _isCourseSelected,
           ),
         ),
       );
@@ -353,7 +355,11 @@ class _CourseSelectionPageContentState
         context: context,
         showDragHandle: true,
         isScrollControlled: true,
-        builder: (context) => _CourseDetailsSheet(course: course),
+        builder: (context) => _CourseDetailsSheet(
+          course: course,
+          toggleCourseSelection: _toggleCourseSelection,
+          isCourseSelected: _isCourseSelected,
+        ),
       ),
     );
   }
@@ -2979,8 +2985,8 @@ class _CourseSyncButton extends StatelessWidget {
     if (isSelected) {
       return FilledButton.icon(
         onPressed: onPressed,
-        icon: const Icon(Icons.check),
-        label: const Text('已加入'),
+        icon: const Icon(Icons.close),
+        label: const Text('移除'),
       );
     }
 
@@ -3064,9 +3070,15 @@ class _CourseMetaChip extends StatelessWidget {
 }
 
 class _CourseDetailsSheet extends StatelessWidget {
-  const _CourseDetailsSheet({required this.course});
+  const _CourseDetailsSheet({
+    required this.course,
+    required this._toggleCourseSelection,
+    required this._isCourseSelected,
+  });
 
   final CourseItem course;
+  final ValueChanged<CourseItem> _toggleCourseSelection;
+  final bool Function(CourseItem course) _isCourseSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -3074,6 +3086,8 @@ class _CourseDetailsSheet extends StatelessWidget {
       child: _CourseDetailsContent(
         course: course,
         padding: const EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 24.0),
+        toggleCourseSelection: _toggleCourseSelection,
+        isCourseSelected: _isCourseSelected,
       ),
     );
   }
@@ -3083,10 +3097,14 @@ class _CourseDetailsDialog extends StatelessWidget {
   const _CourseDetailsDialog({
     required this.course,
     required this.supplementalDetail,
+    required this._toggleCourseSelection,
+    required this._isCourseSelected,
   });
 
   final CourseItem course;
   final Future<CourseSupplementalDetail?> supplementalDetail;
+  final ValueChanged<CourseItem> _toggleCourseSelection;
+  final bool Function(CourseItem course) _isCourseSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -3112,6 +3130,8 @@ class _CourseDetailsDialog extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 24.0),
                 showCloseButton: true,
                 useHorizontalActions: true,
+                toggleCourseSelection: _toggleCourseSelection,
+                isCourseSelected: _isCourseSelected,
               );
             },
           ),
@@ -3121,10 +3141,12 @@ class _CourseDetailsDialog extends StatelessWidget {
   }
 }
 
-class _CourseDetailsContent extends StatelessWidget {
+class _CourseDetailsContent extends StatefulWidget {
   const _CourseDetailsContent({
     required this.course,
     required this.padding,
+    required this._toggleCourseSelection,
+    required this._isCourseSelected,
     this.supplementalDetail,
     this.isLoadingSupplementalDetail = false,
     this.showCloseButton = false,
@@ -3137,15 +3159,26 @@ class _CourseDetailsContent extends StatelessWidget {
   final bool isLoadingSupplementalDetail;
   final bool showCloseButton;
   final bool useHorizontalActions;
+  final ValueChanged<CourseItem> _toggleCourseSelection;
+  final bool Function(CourseItem course) _isCourseSelected;
 
+  @override
+  State<_CourseDetailsContent> createState() => _CourseDetailsContentState();
+}
+
+class _CourseDetailsContentState extends State<_CourseDetailsContent> {
   @override
   Widget build(BuildContext context) {
     final showSupplementalDetail =
-        useHorizontalActions &&
-        (isLoadingSupplementalDetail || supplementalDetail?.hasContent == true);
+        widget.useHorizontalActions &&
+        (widget.isLoadingSupplementalDetail ||
+            widget.supplementalDetail?.hasContent == true);
+    final isCourseSelected = widget._isCourseSelected(widget.course);
 
     final content = Column(
-      mainAxisSize: useHorizontalActions ? MainAxisSize.max : MainAxisSize.min,
+      mainAxisSize: widget.useHorizontalActions
+          ? MainAxisSize.max
+          : MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -3158,7 +3191,7 @@ class _CourseDetailsContent extends StatelessWidget {
                 children: [
                   Flexible(
                     child: _SelectableCourseText(
-                      course.title,
+                      widget.course.title,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -3168,12 +3201,14 @@ class _CourseDetailsContent extends StatelessWidget {
                   const SizedBox(width: 8.0),
                   Padding(
                     padding: const EdgeInsets.only(top: 3.0),
-                    child: _CourseTypeBadge(label: course.courseTypeText),
+                    child: _CourseTypeBadge(
+                      label: widget.course.courseTypeText,
+                    ),
                   ),
                 ],
               ),
             ),
-            if (showCloseButton) ...[
+            if (widget.showCloseButton) ...[
               const SizedBox(width: 8.0),
               IconButton(
                 tooltip: '關閉',
@@ -3184,7 +3219,7 @@ class _CourseDetailsContent extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16.0),
-        if (showSupplementalDetail && useHorizontalActions)
+        if (showSupplementalDetail && widget.useHorizontalActions)
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3193,18 +3228,18 @@ class _CourseDetailsContent extends StatelessWidget {
                   child: SingleChildScrollView(
                     key: const ValueKey('course-primary-details-scroll'),
                     child: _CoursePrimaryDetails(
-                      course: course,
-                      supplementalDetail: supplementalDetail,
+                      course: widget.course,
+                      supplementalDetail: widget.supplementalDetail,
                     ),
                   ),
                 ),
                 const VerticalDivider(width: 32.0),
                 Expanded(
-                  child: isLoadingSupplementalDetail
+                  child: widget.isLoadingSupplementalDetail
                       ? const Center(child: CircularProgressIndicator())
                       : SingleChildScrollView(
                           child: _CourseSupplementalDetails(
-                            detail: supplementalDetail!,
+                            detail: widget.supplementalDetail!,
                           ),
                         ),
                 ),
@@ -3217,25 +3252,33 @@ class _CourseDetailsContent extends StatelessWidget {
             children: [
               Expanded(
                 child: _CoursePrimaryDetails(
-                  course: course,
-                  supplementalDetail: supplementalDetail,
+                  course: widget.course,
+                  supplementalDetail: widget.supplementalDetail,
                 ),
               ),
               const VerticalDivider(width: 32.0),
               Expanded(
-                child: _CourseSupplementalDetails(detail: supplementalDetail!),
+                child: _CourseSupplementalDetails(
+                  detail: widget.supplementalDetail!,
+                ),
               ),
             ],
           )
-        else if (useHorizontalActions)
-          Expanded(child: _CoursePrimaryDetails(course: course))
+        else if (widget.useHorizontalActions)
+          Expanded(child: _CoursePrimaryDetails(course: widget.course))
         else
-          _CoursePrimaryDetails(course: course),
+          _CoursePrimaryDetails(course: widget.course),
         const SizedBox(height: 12.0),
-        if (useHorizontalActions)
+        if (widget.useHorizontalActions)
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              FilledButton.icon(
+                onPressed: _toggle,
+                label: Text(isCourseSelected ? '移除' : '加入'),
+                icon: Icon(isCourseSelected ? Icons.close : Icons.add),
+              ),
+              const SizedBox(width: 8.0),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text('關閉'),
@@ -3254,6 +3297,14 @@ class _CourseDetailsContent extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
+              onPressed: _toggle,
+              child: Text(isCourseSelected ? '移除' : '加入'),
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('關閉'),
             ),
@@ -3262,16 +3313,21 @@ class _CourseDetailsContent extends StatelessWidget {
       ],
     );
 
-    if (useHorizontalActions) {
-      return Padding(padding: padding, child: content);
+    if (widget.useHorizontalActions) {
+      return Padding(padding: widget.padding, child: content);
     }
 
-    return SingleChildScrollView(padding: padding, child: content);
+    return SingleChildScrollView(padding: widget.padding, child: content);
+  }
+
+  void _toggle() {
+    widget._toggleCourseSelection(widget.course);
+    setState(() {});
   }
 
   void _openCourseDetailUrl(BuildContext context) {
     final navigator = Navigator.of(context);
-    final targetUrl = Uri.parse(course.detailUrlWithParams);
+    final targetUrl = Uri.parse(widget.course.detailUrlWithParams);
 
     navigator.pop();
     unawaited(launchUrl(targetUrl, webOnlyWindowName: '_blank'));
