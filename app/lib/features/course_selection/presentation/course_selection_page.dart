@@ -520,7 +520,7 @@ class _CourseSelectionPageContentState
   Uri _selectedCourseShareUrl() {
     final code = _selectedCourseShareCode();
     return Uri.base.replace(
-      path: '/',
+      path: '/magic-pinecone-lite',
       queryParameters: {'c': code},
       fragment: '',
     );
