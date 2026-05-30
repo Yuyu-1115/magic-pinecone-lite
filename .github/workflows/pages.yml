@@ -40,7 +40,7 @@ jobs:
         run: flutter test
 
       - name: Build web
-        run: flutter build web --release --base-href /mpcl/
+        run: flutter build web --release --base-href /
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}mpcl/
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
