@@ -171,7 +171,7 @@ class _SpecialThanksSection extends StatelessWidget {
             icon: Icon(Icons.volunteer_activism_outlined),
             title: 'OpenTPI（昕力資訊）',
             subtitle: '與昕力資訊 OpenTPI 開源專案計畫於2025-2026年度的合作，是促成神奇松果的起點。',
-            url: 'https://www.tpisoftware.com/',
+            url: 'https://tpi.dev/',
           ),
         ),
       ],
