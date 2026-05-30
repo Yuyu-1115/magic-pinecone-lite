@@ -520,7 +520,7 @@ class _CourseSelectionPageContentState
   Uri _selectedCourseShareUrl() {
     final code = _selectedCourseShareCode();
     return Uri.base.replace(
-      path: '/share',
+      path: '/',
       queryParameters: {'c': code},
       fragment: '',
     );
