@@ -2,11 +2,16 @@ name: Deploy Flutter Web App
 
 on:
   workflow_dispatch:
+    inputs:
+      app_version:
+        description: "Optional app version for manual deploys, e.g. 0.2.1"
+        required: false
+        type: string
   push:
     tags: ["v*.*.*"]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -23,12 +28,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+
+      - name: Sync app version
+        run: |
+          APP_VERSION="${{ inputs.app_version }}"
+          if [ -z "$APP_VERSION" ] && [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            APP_VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if [ -z "$APP_VERSION" ]; then
+            echo "No tag/input version provided; keeping checked-in app version."
+            exit 0
+          fi
+          echo "Using app version $APP_VERSION"
+          echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
+          perl -0pi -e "s/^version: .*/version: $APP_VERSION/m" pubspec.yaml
+          perl -0pi -e "s/appVersion: '[^']*'/appVersion: '$APP_VERSION'/" lib/features/settings/data/settings_repository.dart
+          grep -n "^version:" pubspec.yaml
+          grep -n "appVersion:" lib/features/settings/data/settings_repository.dart
+
+      - name: Commit app version
+        run: |
+          if git diff --quiet -- pubspec.yaml lib/features/settings/data/settings_repository.dart; then
+            echo "App version already matches; no commit needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml lib/features/settings/data/settings_repository.dart
+          git commit -m "chore: bump app version to $APP_VERSION"
+          git push origin HEAD:${{ github.event.repository.default_branch }}
 
       - name: Install dependencies
         run: flutter pub get
