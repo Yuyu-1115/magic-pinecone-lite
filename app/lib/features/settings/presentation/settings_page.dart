@@ -167,11 +167,23 @@ class _SpecialThanksSection extends StatelessWidget {
         const SizedBox(height: 10.0),
         const Card(
           margin: EdgeInsets.zero,
-          child: _CommunityTile(
-            icon: Icon(Icons.volunteer_activism_outlined),
-            title: 'OpenTPI（昕力資訊）',
-            subtitle: '與昕力資訊 OpenTPI 開源專案計畫於2025-2026年度的合作，是促成神奇松果的起點。',
-            url: 'https://tpi.dev/',
+          child: Column(
+            children: [
+              _CommunityTile(
+                icon: Icon(Icons.volunteer_activism_outlined),
+                title: 'OpenTPI（昕力資訊）',
+                subtitle: '與昕力資訊 OpenTPI 開放原始碼專案計畫於2025-2026年度的合作，是促成神奇松果的起點。',
+                url: 'https://tpi.dev/',
+              ),
+              Divider(height: 1.0),
+              _CommunityTile(
+                icon: FaIcon(FontAwesomeIcons.github),
+                title: 'Course Finder Fetcher',
+                subtitle: '課程資料擷取流程參考 NCU Course Finder 的 DataFetcher 專案。',
+                url:
+                    'https://github.com/zetaraku/NCU-Course-Finder-DataFetcher-v2',
+              ),
+            ],
           ),
         ),
       ],
