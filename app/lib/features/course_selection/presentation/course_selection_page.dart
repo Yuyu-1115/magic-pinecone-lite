@@ -11,6 +11,7 @@ import 'package:magic_pinecone_course_demo/features/course_selection/data/course
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_selection_storage.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_codec.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_url.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_url_cleaner.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_supplemental_detail_catalog.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_detail_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
@@ -295,6 +296,7 @@ class _CourseSelectionPageContentState
       showSaveAction: _canSaveCourseSelection,
       showPreviewHint: _isPreviewingSharedCourses,
       onSavePressed: _saveCourseSelection,
+      onDiscardPressed: _discardUnsavedCourseSelection,
       onSharePressed: _shareSelectedCourses,
       onCourseTap: (course) => _showTimetableCourseDetails(
         context,
@@ -557,11 +559,21 @@ class _CourseSelectionPageContentState
     final restoreState = await _initialShareCode();
     if (restoreState == null) return;
 
+    await _restoreCourseSelection(restoreState);
+  }
+
+  Future<void> _restoreCourseSelection(
+    _CourseShareRestoreState restoreState,
+  ) async {
     final serialNos = _decodeShareCode(restoreState.code);
     if (serialNos == null) return;
 
     final courses = await controller.findCoursesBySerialNos(serialNos);
     if (!mounted || courses.isEmpty) return;
+
+    if (restoreState.isPreview) {
+      clearCourseShareCodeFromBrowserUrl();
+    }
 
     setState(() {
       _isPreviewingSharedCourses = restoreState.isPreview;
@@ -578,6 +590,27 @@ class _CourseSelectionPageContentState
     if (!restoreState.isPreview) {
       await widget.courseSelectionStorage.writeShareCode(restoreState.code);
     }
+  }
+
+  Future<void> _discardUnsavedCourseSelection() async {
+    final storedCode = await widget.courseSelectionStorage.readShareCode();
+    final normalizedStoredCode = storedCode?.trim();
+    if (normalizedStoredCode == null || normalizedStoredCode.isEmpty) {
+      if (!mounted) return;
+
+      setState(() {
+        _isPreviewingSharedCourses = false;
+        _hasUnsavedCourseSelection = false;
+        _selectedCourses.clear();
+      });
+      return;
+    }
+
+    final restoreState = _CourseShareRestoreState(
+      code: normalizedStoredCode,
+      isPreview: false,
+    );
+    await _restoreCourseSelection(restoreState);
   }
 
   Future<void> _saveCourseSelection() async {
@@ -981,6 +1014,7 @@ class _CourseTimetableView extends StatelessWidget {
     required this.showSaveAction,
     required this.showPreviewHint,
     required this.onSavePressed,
+    required this.onDiscardPressed,
     required this.onSharePressed,
     required this.onCourseTap,
   });
@@ -1000,6 +1034,7 @@ class _CourseTimetableView extends StatelessWidget {
   final bool showSaveAction;
   final bool showPreviewHint;
   final VoidCallback onSavePressed;
+  final VoidCallback onDiscardPressed;
   final VoidCallback onSharePressed;
   final ValueChanged<ScheduledCourse> onCourseTap;
 
@@ -1115,6 +1150,7 @@ class _CourseTimetableView extends StatelessWidget {
                 showSaveAction: showSaveAction,
                 showPreviewHint: showPreviewHint,
                 onSavePressed: onSavePressed,
+                onDiscardPressed: onDiscardPressed,
                 onSharePressed: onSharePressed,
               ),
             ),
@@ -1132,6 +1168,7 @@ class _TimetableToolbar extends StatelessWidget {
     required this.showSaveAction,
     required this.showPreviewHint,
     required this.onSavePressed,
+    required this.onDiscardPressed,
     required this.onSharePressed,
   });
 
@@ -1140,6 +1177,7 @@ class _TimetableToolbar extends StatelessWidget {
   final bool showSaveAction;
   final bool showPreviewHint;
   final VoidCallback onSavePressed;
+  final VoidCallback onDiscardPressed;
   final VoidCallback onSharePressed;
 
   @override
@@ -1190,12 +1228,18 @@ class _TimetableToolbar extends StatelessWidget {
             ),
             if (showSaveAction)
               _TimetableToolbarTextAction(
+                label: '還原',
+                onPressed: onDiscardPressed,
+                foregroundColor: colorScheme.error,
+              ),
+            if (showSaveAction)
+              _TimetableToolbarTextAction(
                 label: '儲存',
                 onPressed: onSavePressed,
                 foregroundColor: colorScheme.primary,
               ),
             _TimetableToolbarTextAction(
-              label: '分享課表',
+              label: '分享',
               onPressed: onSharePressed,
               foregroundColor: colorScheme.onSurface,
             ),

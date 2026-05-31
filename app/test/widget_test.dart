@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:magic_pinecone_course_demo/core/app/app_theme.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_repository.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/data/course_selection_storage.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_codec.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_page.dart';
@@ -137,8 +138,80 @@ void main() {
       find.byType(NavigationBar),
     );
     expect(navigationBar.selectedIndex, 1);
-    expect(find.text('分享課表'), findsOneWidget);
+    expect(find.text('分享'), findsOneWidget);
   });
+
+  testWidgets(
+    'restore action discards shared preview and reloads saved courses',
+    (tester) async {
+      final controller = CourseSelectionController(
+        repository: _FakeCourseRepository(
+          result: const CourseSearchResult(
+            totalCount: 2,
+            courses: [
+              CourseItem(
+                serialNo: '00001',
+                classNo: 'CS1001',
+                title: '已儲存課程',
+                credit: 3,
+                teachers: ['王小明'],
+                classTimes: ['1-1'],
+              ),
+              CourseItem(
+                serialNo: '00002',
+                classNo: 'CS1002',
+                title: '分享預覽課程',
+                credit: 3,
+                teachers: ['陳小美'],
+                classTimes: ['2-1'],
+              ),
+            ],
+          ),
+        ),
+      );
+      addTearDown(controller.dispose);
+      final themeController = AppThemeController();
+      addTearDown(themeController.dispose);
+      final settingsViewModel = SettingsViewModel(
+        appThemeController: themeController,
+        repository: const StaticSettingsRepository(),
+      );
+      addTearDown(settingsViewModel.dispose);
+      final storage = MemoryCourseSelectionStorage();
+      const shareCodec = CourseShareCodec();
+      await storage.writeShareCode(shareCodec.encodeSerialNos(['00001']));
+
+      await tester.pumpWidget(
+        ValueListenableBuilder<ThemeMode>(
+          valueListenable: themeController,
+          builder: (context, themeMode, _) => MaterialApp(
+            theme: ThemeData.light(),
+            darkTheme: ThemeData.dark(),
+            themeMode: themeMode,
+            home: CourseSelectionPage(
+              controller: controller,
+              courseSelectionStorage: storage,
+              initialShareCode: shareCodec.encodeSerialNos(['00002']),
+              settingsViewModel: settingsViewModel,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('分享預覽課程'), findsOneWidget);
+      expect(find.text('已儲存課程'), findsNothing);
+      expect(find.text('預覽'), findsOneWidget);
+
+      await tester.tap(find.text('還原'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('已儲存課程'), findsOneWidget);
+      expect(find.text('分享預覽課程'), findsNothing);
+      expect(find.text('預覽'), findsNothing);
+      expect(find.text('還原'), findsNothing);
+    },
+  );
 
   testWidgets('course detail sheet updates sync action label after toggling', (
     tester,
