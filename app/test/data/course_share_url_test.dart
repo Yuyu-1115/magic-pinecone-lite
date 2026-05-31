@@ -30,4 +30,33 @@ void main() {
       'https://magic-pinecone.github.io/magic-pinecone-lite?c=Z21EeqHRw#',
     );
   });
+
+  test('removeCourseShareCode clears only the shared course parameter', () {
+    final cleanUrl = removeCourseShareCode(
+      Uri.parse(
+        'https://magic-pinecone.github.io/magic-pinecone-lite?c=Z21EeqHRw&tab=course#',
+      ),
+    );
+
+    expect(
+      cleanUrl.toString(),
+      'https://magic-pinecone.github.io/magic-pinecone-lite?tab=course#',
+    );
+  });
+
+  test(
+    'removeCourseShareCode clears the query when c is the only parameter',
+    () {
+      final cleanUrl = removeCourseShareCode(
+        Uri.parse(
+          'https://magic-pinecone.github.io/magic-pinecone-lite?c=Z21EeqHRw#',
+        ),
+      );
+
+      expect(
+        cleanUrl.toString(),
+        'https://magic-pinecone.github.io/magic-pinecone-lite#',
+      );
+    },
+  );
 }

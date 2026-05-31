@@ -19,3 +19,20 @@ bool _isLocalDevelopmentUri(Uri uri) {
       uri.host == '::1' ||
       uri.host.isEmpty;
 }
+
+Uri removeCourseShareCode(Uri uri) {
+  if (!uri.queryParameters.containsKey('c')) return uri;
+
+  final queryParameters = Map<String, String>.from(uri.queryParameters)
+    ..remove('c');
+
+  return Uri(
+    scheme: uri.scheme,
+    userInfo: uri.userInfo,
+    host: uri.host,
+    port: uri.hasPort ? uri.port : null,
+    path: uri.path,
+    queryParameters: queryParameters.isEmpty ? null : queryParameters,
+    fragment: uri.fragment,
+  );
+}

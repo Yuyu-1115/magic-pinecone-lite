@@ -11,6 +11,7 @@ import 'package:magic_pinecone_course_demo/features/course_selection/data/course
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_selection_storage.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_codec.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_url.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_url_cleaner.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_supplemental_detail_catalog.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_detail_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
@@ -191,15 +192,7 @@ class _CourseSelectionPageContentState
           showAppBar: false,
         ),
       },
-      floatingActionButton:
-          _selectedView == _CourseSelectionView.search &&
-              _canSaveCourseSelection
-          ? FloatingActionButton(
-              tooltip: '儲存課表',
-              onPressed: _saveCourseSelection,
-              child: const Icon(Icons.save_outlined),
-            )
-          : null,
+      floatingActionButton: _buildMobileCourseSelectionActions(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedView.index,
         onDestinationSelected: (index) {
@@ -292,15 +285,47 @@ class _CourseSelectionPageContentState
       snapshot: snapshot,
       totalCredits: _selectedTotalCredits,
       conflictSlotCount: _conflictSlotCount(snapshot),
-      showSaveAction: _canSaveCourseSelection,
+      showSaveAction: _canSaveCourseSelection && useDesktopDialog,
       showPreviewHint: _isPreviewingSharedCourses,
       onSavePressed: _saveCourseSelection,
-      onSharePressed: _shareSelectedCourses,
+      onDiscardPressed: _discardUnsavedCourseSelection,
+      onSharePressed: _hasUnsavedCourseSelection ? null : _shareSelectedCourses,
       onCourseTap: (course) => _showTimetableCourseDetails(
         context,
         course,
         useDesktopDialog: useDesktopDialog,
       ),
+    );
+  }
+
+  Widget? _buildMobileCourseSelectionActions() {
+    if (!_canSaveCourseSelection ||
+        _selectedView == _CourseSelectionView.settings) {
+      return null;
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        FloatingActionButton.small(
+          heroTag: 'restore-course-selection',
+          tooltip: '還原課表',
+          backgroundColor: colorScheme.errorContainer,
+          foregroundColor: colorScheme.onErrorContainer,
+          onPressed: _discardUnsavedCourseSelection,
+          child: const Icon(Icons.restore),
+        ),
+        const SizedBox(height: 12.0),
+        FloatingActionButton(
+          heroTag: 'save-course-selection',
+          tooltip: '儲存課表',
+          onPressed: _saveCourseSelection,
+          child: const Icon(Icons.save_outlined),
+        ),
+      ],
     );
   }
 
@@ -557,11 +582,21 @@ class _CourseSelectionPageContentState
     final restoreState = await _initialShareCode();
     if (restoreState == null) return;
 
+    await _restoreCourseSelection(restoreState);
+  }
+
+  Future<void> _restoreCourseSelection(
+    _CourseShareRestoreState restoreState,
+  ) async {
     final serialNos = _decodeShareCode(restoreState.code);
     if (serialNos == null) return;
 
     final courses = await controller.findCoursesBySerialNos(serialNos);
     if (!mounted || courses.isEmpty) return;
+
+    if (restoreState.isPreview) {
+      clearCourseShareCodeFromBrowserUrl();
+    }
 
     setState(() {
       _isPreviewingSharedCourses = restoreState.isPreview;
@@ -578,6 +613,27 @@ class _CourseSelectionPageContentState
     if (!restoreState.isPreview) {
       await widget.courseSelectionStorage.writeShareCode(restoreState.code);
     }
+  }
+
+  Future<void> _discardUnsavedCourseSelection() async {
+    final storedCode = await widget.courseSelectionStorage.readShareCode();
+    final normalizedStoredCode = storedCode?.trim();
+    if (normalizedStoredCode == null || normalizedStoredCode.isEmpty) {
+      if (!mounted) return;
+
+      setState(() {
+        _isPreviewingSharedCourses = false;
+        _hasUnsavedCourseSelection = false;
+        _selectedCourses.clear();
+      });
+      return;
+    }
+
+    final restoreState = _CourseShareRestoreState(
+      code: normalizedStoredCode,
+      isPreview: false,
+    );
+    await _restoreCourseSelection(restoreState);
   }
 
   Future<void> _saveCourseSelection() async {
@@ -981,6 +1037,7 @@ class _CourseTimetableView extends StatelessWidget {
     required this.showSaveAction,
     required this.showPreviewHint,
     required this.onSavePressed,
+    required this.onDiscardPressed,
     required this.onSharePressed,
     required this.onCourseTap,
   });
@@ -1000,7 +1057,8 @@ class _CourseTimetableView extends StatelessWidget {
   final bool showSaveAction;
   final bool showPreviewHint;
   final VoidCallback onSavePressed;
-  final VoidCallback onSharePressed;
+  final VoidCallback onDiscardPressed;
+  final VoidCallback? onSharePressed;
   final ValueChanged<ScheduledCourse> onCourseTap;
 
   @override
@@ -1115,6 +1173,7 @@ class _CourseTimetableView extends StatelessWidget {
                 showSaveAction: showSaveAction,
                 showPreviewHint: showPreviewHint,
                 onSavePressed: onSavePressed,
+                onDiscardPressed: onDiscardPressed,
                 onSharePressed: onSharePressed,
               ),
             ),
@@ -1132,6 +1191,7 @@ class _TimetableToolbar extends StatelessWidget {
     required this.showSaveAction,
     required this.showPreviewHint,
     required this.onSavePressed,
+    required this.onDiscardPressed,
     required this.onSharePressed,
   });
 
@@ -1140,7 +1200,8 @@ class _TimetableToolbar extends StatelessWidget {
   final bool showSaveAction;
   final bool showPreviewHint;
   final VoidCallback onSavePressed;
-  final VoidCallback onSharePressed;
+  final VoidCallback onDiscardPressed;
+  final VoidCallback? onSharePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -1190,14 +1251,23 @@ class _TimetableToolbar extends StatelessWidget {
             ),
             if (showSaveAction)
               _TimetableToolbarTextAction(
+                label: '還原',
+                onPressed: onDiscardPressed,
+                foregroundColor: colorScheme.error,
+              ),
+            if (showSaveAction)
+              _TimetableToolbarTextAction(
                 label: '儲存',
                 onPressed: onSavePressed,
                 foregroundColor: colorScheme.primary,
               ),
-            _TimetableToolbarTextAction(
-              label: '分享課表',
-              onPressed: onSharePressed,
-              foregroundColor: colorScheme.onSurface,
+            Tooltip(
+              message: onSharePressed == null ? '請先儲存後再分享' : '複製分享連結',
+              child: _TimetableToolbarTextAction(
+                label: '分享',
+                onPressed: onSharePressed,
+                foregroundColor: colorScheme.onSurface,
+              ),
             ),
           ],
         ),
@@ -1214,11 +1284,15 @@ class _TimetableToolbarTextAction extends StatelessWidget {
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color foregroundColor;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveForegroundColor = onPressed == null
+        ? Theme.of(context).disabledColor
+        : foregroundColor;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1229,7 +1303,7 @@ class _TimetableToolbarTextAction extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: foregroundColor,
+              color: effectiveForegroundColor,
               fontWeight: FontWeight.w700,
             ),
           ),
