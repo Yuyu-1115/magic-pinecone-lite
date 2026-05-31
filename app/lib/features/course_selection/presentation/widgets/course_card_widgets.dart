@@ -408,10 +408,6 @@ class _CourseDetailsContent extends StatefulWidget {
 class _CourseDetailsContentState extends State<_CourseDetailsContent> {
   @override
   Widget build(BuildContext context) {
-    final showSupplementalDetail =
-        widget.useHorizontalActions &&
-        (widget.isLoadingSupplementalDetail ||
-            widget.supplementalDetail?.hasContent == true);
     final isCourseSelected = widget._isCourseSelected(widget.course);
 
     final content = Column(
@@ -458,7 +454,7 @@ class _CourseDetailsContentState extends State<_CourseDetailsContent> {
           ],
         ),
         const SizedBox(height: 16.0),
-        if (showSupplementalDetail && widget.useHorizontalActions)
+        if (widget.useHorizontalActions)
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,35 +472,24 @@ class _CourseDetailsContentState extends State<_CourseDetailsContent> {
                 Expanded(
                   child: widget.isLoadingSupplementalDetail
                       ? const Center(child: CircularProgressIndicator())
-                      : SingleChildScrollView(
-                          child: _CourseSupplementalDetails(
-                            detail: widget.supplementalDetail!,
-                          ),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            return SingleChildScrollView(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight,
+                                ),
+                                child: _CourseSupplementalDetails(
+                                  detail: widget.supplementalDetail,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                 ),
               ],
             ),
           )
-        else if (showSupplementalDetail)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _CoursePrimaryDetails(
-                  course: widget.course,
-                  supplementalDetail: widget.supplementalDetail,
-                ),
-              ),
-              const VerticalDivider(width: 32.0),
-              Expanded(
-                child: _CourseSupplementalDetails(
-                  detail: widget.supplementalDetail!,
-                ),
-              ),
-            ],
-          )
-        else if (widget.useHorizontalActions)
-          Expanded(child: _CoursePrimaryDetails(course: widget.course))
         else
           _CoursePrimaryDetails(course: widget.course),
         const SizedBox(height: 12.0),
@@ -640,10 +625,15 @@ class _CoursePrimaryDetails extends StatelessWidget {
 class _CourseSupplementalDetails extends StatelessWidget {
   const _CourseSupplementalDetails({required this.detail});
 
-  final CourseSupplementalDetail detail;
+  final CourseSupplementalDetail? detail;
 
   @override
   Widget build(BuildContext context) {
+    final detail = this.detail;
+    if (detail == null || !_hasDisplayedContent(detail)) {
+      return const _CourseSupplementalFallback();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -653,6 +643,52 @@ class _CourseSupplementalDetails extends StatelessWidget {
         _CourseSupplementalSection(title: '教學方式', value: detail.teachingMethod),
         _CourseSupplementalSection(title: '評分方式', value: detail.gradingPolicy),
       ],
+    );
+  }
+
+  bool _hasDisplayedContent(CourseSupplementalDetail detail) {
+    return detail.objectives.isNotEmpty ||
+        detail.content.isNotEmpty ||
+        detail.books.isNotEmpty ||
+        detail.teachingMethod.isNotEmpty ||
+        detail.gradingPolicy.isNotEmpty;
+  }
+}
+
+class _CourseSupplementalFallback extends StatelessWidget {
+  const _CourseSupplementalFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 32.0,
+            color: colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 12.0),
+          Text(
+            '尚未提供課程詳細資訊',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4.0),
+          Text(
+            '目前沒有補充說明、指定用書或評分方式。',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

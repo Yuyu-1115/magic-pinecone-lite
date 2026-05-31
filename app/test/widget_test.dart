@@ -4,6 +4,8 @@ import 'package:magic_pinecone_course_demo/core/app/app_theme.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_repository.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_selection_storage.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_codec.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/data/course_supplemental_detail_catalog.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/models/course_detail_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_page.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
@@ -296,6 +298,74 @@ void main() {
     expect(tester.widget<InkWell>(shareInkWell()).onTap, isNotNull);
   });
 
+  testWidgets('course detail dialog shows fallback when details are empty', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final controller = CourseSelectionController(
+      repository: _FakeCourseRepository(
+        result: const CourseSearchResult(
+          totalCount: 1,
+          courses: [
+            CourseItem(
+              serialNo: '00001',
+              classNo: 'CS1001',
+              title: '程式設計',
+              credit: 3,
+              teachers: ['王小明'],
+              classTimes: ['1-1'],
+            ),
+          ],
+        ),
+      ),
+    );
+    addTearDown(controller.dispose);
+    final themeController = AppThemeController();
+    addTearDown(themeController.dispose);
+    final settingsViewModel = SettingsViewModel(
+      appThemeController: themeController,
+      repository: const StaticSettingsRepository(),
+    );
+    addTearDown(settingsViewModel.dispose);
+
+    await tester.pumpWidget(
+      ValueListenableBuilder<ThemeMode>(
+        valueListenable: themeController,
+        builder: (context, themeMode, _) => MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: themeMode,
+          home: CourseSelectionPage(
+            controller: controller,
+            courseSupplementalDetailRepository:
+                const _FakeCourseSupplementalDetailRepository(
+                  detail: CourseSupplementalDetail(
+                    serialNo: '00001',
+                    objectives: '',
+                    content: '',
+                    books: '',
+                    teachingMethod: '',
+                    gradingPolicy: '',
+                  ),
+                ),
+            settingsViewModel: settingsViewModel,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('程式設計'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('尚未提供課程詳細資訊'), findsOneWidget);
+    expect(find.text('目前沒有補充說明、指定用書或評分方式。'), findsOneWidget);
+  });
+
   testWidgets('course detail sheet updates sync action label after toggling', (
     tester,
   ) async {
@@ -390,5 +460,17 @@ class _FakeCourseRepository implements CourseRepository {
     int limit = 100,
   }) async {
     return result;
+  }
+}
+
+class _FakeCourseSupplementalDetailRepository
+    implements CourseSupplementalDetailRepository {
+  const _FakeCourseSupplementalDetailRepository({required this.detail});
+
+  final CourseSupplementalDetail? detail;
+
+  @override
+  Future<CourseSupplementalDetail?> findBySerialNo(String serialNo) async {
+    return detail;
   }
 }
