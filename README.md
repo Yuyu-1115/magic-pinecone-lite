@@ -2,7 +2,15 @@
 
 > English | [正體中文](docs/README.zh-TW.md)
 
-A lightweight Flutter web app and static data pipeline for the course selection slice of Magic Pinecone（神奇松果）, the NCU campus service project.
+Magic Pinecone（神奇松果）is a campus service project developed by Google
+Developers on Campus NCU. The project aims to bring scattered campus
+information and fragmented university system features into one convenient
+service for NCU students.
+
+Magic Pinecone Lite is the current trial version. It focuses on course
+selection while keeping the static data pipeline that powers the app: course
+search, timetable preview, course sharing, and generated course/scholarship
+data.
 
 This repository contains two parts:
 
