@@ -11,7 +11,7 @@ class StaticSettingsRepository implements SettingsRepository {
   SettingsSnapshot loadSettings() {
     return const SettingsSnapshot(
       appName: '神奇松果 Lite',
-      appVersion: '0.2.1',
+      appVersion: '0.2.2',
       summary:
           '神奇松果是由學生社群 Google Developers on Campus NCU 正在開發中的軟體。期望能夠將零碎的校務資訊、分散的系統功能整合起來，為中大學生提供一個一站式的服務。目前的試行版本（Lite）提供以下功能：',
       statusItems: [
