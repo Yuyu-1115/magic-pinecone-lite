@@ -1,7 +1,7 @@
-part of '../course_selection_page.dart';
+import 'package:flutter/material.dart';
 
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.onRetry});
+class CourseErrorState extends StatelessWidget {
+  const CourseErrorState({super.key, required this.onRetry});
 
   final VoidCallback onRetry;
 
@@ -22,8 +22,8 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+class CourseEmptyState extends StatelessWidget {
+  const CourseEmptyState({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,16 @@
-part of '../course_selection_page.dart';
+import 'dart:async';
 
-class _ResultSummary extends StatelessWidget {
-  const _ResultSummary({
+import 'package:flutter/material.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/models/course_detail_models.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_layout.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_detail_row.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class CourseResultSummary extends StatelessWidget {
+  const CourseResultSummary({
+    super.key,
     required this.controller,
     required this.displayedCourseCount,
     required this.localFilterActive,
@@ -84,8 +93,9 @@ class _ResultSummary extends StatelessWidget {
   }
 }
 
-class _CourseListTile extends StatelessWidget {
-  const _CourseListTile({
+class CourseListTile extends StatelessWidget {
+  const CourseListTile({
+    super.key,
     required this.course,
     required this.isSelected,
     required this.canSyncToTimetable,
@@ -297,8 +307,9 @@ class _CourseMetaChip extends StatelessWidget {
   }
 }
 
-class _CourseDetailsSheet extends StatelessWidget {
-  const _CourseDetailsSheet({
+class CourseDetailsSheet extends StatelessWidget {
+  const CourseDetailsSheet({
+    super.key,
     required this.course,
     required this._toggleCourseSelection,
     required this._isCourseSelected,
@@ -321,8 +332,9 @@ class _CourseDetailsSheet extends StatelessWidget {
   }
 }
 
-class _CourseDetailsDialog extends StatelessWidget {
-  const _CourseDetailsDialog({
+class CourseDetailsDialog extends StatelessWidget {
+  const CourseDetailsDialog({
+    super.key,
     required this.course,
     required this.supplementalDetail,
     required this._toggleCourseSelection,
@@ -341,12 +353,11 @@ class _CourseDetailsDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.all(32.0),
       child: ConstrainedBox(
         constraints: const BoxConstraints(
-          maxWidth:
-              _CourseSelectionPageContentState._maxCourseDetailsDialogWidth,
+          maxWidth: CourseSelectionLayout.maxCourseDetailsDialogWidth,
         ),
         child: SizedBox(
           key: const ValueKey('course-details-dialog-body'),
-          height: _CourseSelectionPageContentState._courseDetailsDialogHeight,
+          height: CourseSelectionLayout.courseDetailsDialogHeight,
           child: FutureBuilder<CourseSupplementalDetail?>(
             future: supplementalDetail,
             builder: (context, snapshot) {
@@ -418,7 +429,7 @@ class _CourseDetailsContentState extends State<_CourseDetailsContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Flexible(
-                    child: _SelectableCourseText(
+                    child: CourseSelectableText(
                       widget.course.title,
                       style: const TextStyle(
                         fontSize: 20,
@@ -576,38 +587,38 @@ class _CoursePrimaryDetails extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _CourseDetailRow(
+        CourseDetailRow(
           icon: Icons.confirmation_number_outlined,
           label: '課號',
           value: '${course.classNo} / ${course.serialNo}',
         ),
-        _CourseDetailRow(
+        CourseDetailRow(
           icon: Icons.person_outline,
           label: '授課教師',
           value: course.teacherText,
         ),
-        _CourseDetailRow(
+        CourseDetailRow(
           icon: Icons.schedule,
           label: '上課時間',
           value: course.classTimeText,
         ),
-        _CourseDetailRow(
+        CourseDetailRow(
           icon: Icons.school_outlined,
           label: '學分',
           value: '${course.creditText} 學分',
         ),
-        _CourseDetailRow(
+        CourseDetailRow(
           icon: Icons.groups_outlined,
           label: '選課人數',
           value: course.enrollmentText,
         ),
-        _CourseDetailRow(
+        CourseDetailRow(
           icon: Icons.vpn_key_outlined,
           label: '密碼卡',
           value: course.passwordCardText,
         ),
         if (course.departmentName != null || course.collegeName != null)
-          _CourseDetailRow(
+          CourseDetailRow(
             icon: Icons.account_balance_outlined,
             label: '開課單位',
             value: [
@@ -616,7 +627,7 @@ class _CoursePrimaryDetails extends StatelessWidget {
             ].join(' / '),
           ),
         if (distributionConditionText.isNotEmpty)
-          _CourseDetailRow(
+          CourseDetailRow(
             icon: Icons.rule_outlined,
             label: '分發條件',
             value: distributionConditionText,
@@ -663,7 +674,7 @@ class _CourseSupplementalSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SelectableCourseText(
+          CourseSelectableText(
             title,
             style: TextStyle(
               fontSize: 12.0,
@@ -672,71 +683,9 @@ class _CourseSupplementalSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4.0),
-          _SelectableCourseText(
+          CourseSelectableText(
             value,
             style: TextStyle(height: 1.45, color: colorScheme.onSurface),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SelectableCourseText extends StatelessWidget {
-  const _SelectableCourseText(this.data, {this.style});
-
-  final String data;
-  final TextStyle? style;
-
-  @override
-  Widget build(BuildContext context) {
-    if (kIsWeb) {
-      return SelectableText(data, style: style);
-    }
-    return Text(data, style: style);
-  }
-}
-
-class _CourseDetailRow extends StatelessWidget {
-  const _CourseDetailRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20.0, color: colorScheme.primary),
-          const SizedBox(width: 12.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SelectableCourseText(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 2.0),
-                _SelectableCourseText(
-                  value,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
           ),
         ],
       ),

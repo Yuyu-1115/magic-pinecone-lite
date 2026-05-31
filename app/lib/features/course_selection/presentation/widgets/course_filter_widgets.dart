@@ -1,7 +1,16 @@
-part of '../course_selection_page.dart';
+import 'dart:async';
 
-class _SearchPanel extends StatefulWidget {
-  const _SearchPanel({
+import 'package:flutter/material.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_layout.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
+
+enum _CourseTypeFilter { all, required, elective }
+
+enum _VacancyFilter { all, available, full }
+
+class CourseSearchPanel extends StatefulWidget {
+  const CourseSearchPanel({
+    super.key,
     required this.controller,
     required this.useAdvancedFilterDialog,
   });
@@ -12,10 +21,10 @@ class _SearchPanel extends StatefulWidget {
   final bool useAdvancedFilterDialog;
 
   @override
-  State<_SearchPanel> createState() => _SearchPanelState();
+  State<CourseSearchPanel> createState() => _CourseSearchPanelState();
 }
 
-class _SearchPanelState extends State<_SearchPanel> {
+class _CourseSearchPanelState extends State<CourseSearchPanel> {
   late final TextEditingController _keywordController;
 
   CourseSelectionController get controller => widget.controller;
@@ -132,8 +141,7 @@ class _SearchPanelState extends State<_SearchPanel> {
               insetPadding: const EdgeInsets.all(32.0),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
-                  maxWidth: _CourseSelectionPageContentState
-                      ._maxAdvancedFilterDialogWidth,
+                  maxWidth: CourseSelectionLayout.maxAdvancedFilterDialogWidth,
                 ),
                 child: SizedBox(
                   height: (MediaQuery.sizeOf(context).height - 64.0).clamp(
@@ -257,7 +265,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(
-            maxWidth: _CourseSelectionPageContentState._maxSheetWidth,
+            maxWidth: CourseSelectionLayout.maxSheetWidth,
           ),
           child: content,
         ),
@@ -779,7 +787,7 @@ class _DraftCreditFilterGrid extends StatelessWidget {
           spacing: spacing,
           runSpacing: spacing,
           children: [
-            for (final credit in _SearchPanel._creditOptions)
+            for (final credit in CourseSearchPanel._creditOptions)
               SizedBox(
                 width: itemWidth,
                 child: FilterChip(
@@ -844,7 +852,7 @@ class _DraftClassTimePickerSheetState
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(
-            maxWidth: _CourseSelectionPageContentState._maxSheetWidth,
+            maxWidth: CourseSelectionLayout.maxSheetWidth,
           ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0 + bottomInset),
@@ -1188,8 +1196,9 @@ class _DraftVacancySegmentedControl extends StatelessWidget {
   }
 }
 
-class _LocalCourseFilterSheet extends StatefulWidget {
-  const _LocalCourseFilterSheet({
+class LocalCourseFilterSheet extends StatefulWidget {
+  const LocalCourseFilterSheet({
+    super.key,
     required this.onlyShowTimetableCompatibleCourses,
     required this.onlyShowSelectedCourses,
     required this.useDialogLayout,
@@ -1200,11 +1209,10 @@ class _LocalCourseFilterSheet extends StatefulWidget {
   final bool useDialogLayout;
 
   @override
-  State<_LocalCourseFilterSheet> createState() =>
-      _LocalCourseFilterSheetState();
+  State<LocalCourseFilterSheet> createState() => _LocalCourseFilterSheetState();
 }
 
-class _LocalCourseFilterSheetState extends State<_LocalCourseFilterSheet> {
+class _LocalCourseFilterSheetState extends State<LocalCourseFilterSheet> {
   late bool _onlyShowTimetableCompatibleCourses;
   late bool _onlyShowSelectedCourses;
 
@@ -1251,7 +1259,7 @@ class _LocalCourseFilterSheetState extends State<_LocalCourseFilterSheet> {
             width: double.infinity,
             child: FilledButton(
               onPressed: () => Navigator.of(context).pop(
-                _LocalCourseFilterState(
+                LocalCourseFilterState(
                   onlyShowTimetableCompatibleCourses:
                       _onlyShowTimetableCompatibleCourses,
                   onlyShowSelectedCourses: _onlyShowSelectedCourses,
@@ -1272,7 +1280,7 @@ class _LocalCourseFilterSheetState extends State<_LocalCourseFilterSheet> {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(
-            maxWidth: _CourseSelectionPageContentState._maxSheetWidth,
+            maxWidth: CourseSelectionLayout.maxSheetWidth,
           ),
           child: content,
         ),
@@ -1281,8 +1289,8 @@ class _LocalCourseFilterSheetState extends State<_LocalCourseFilterSheet> {
   }
 }
 
-class _LocalCourseFilterState {
-  const _LocalCourseFilterState({
+class LocalCourseFilterState {
+  const LocalCourseFilterState({
     required this.onlyShowTimetableCompatibleCourses,
     required this.onlyShowSelectedCourses,
   });

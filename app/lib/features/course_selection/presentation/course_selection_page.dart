@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
@@ -13,19 +12,16 @@ import 'package:magic_pinecone_course_demo/features/course_selection/data/course
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_url.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_share_url_cleaner.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/data/course_supplemental_detail_catalog.dart';
-import 'package:magic_pinecone_course_demo/features/course_selection/models/course_detail_models.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_layout.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
-import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/calendar_item.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_card_widgets.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_filter_widgets.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_result_widgets.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_state_widgets.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_timetable_view.dart';
 import 'package:magic_pinecone_course_demo/features/settings/presentation/settings_page.dart';
 import 'package:magic_pinecone_course_demo/features/settings/presentation/view_models/settings_view_model.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-part 'widgets/course_result_widgets.dart';
-part 'widgets/course_timetable_view.dart';
-part 'widgets/course_filter_widgets.dart';
-part 'widgets/course_card_widgets.dart';
-part 'widgets/course_state_widgets.dart';
 
 class CourseSelectionPage extends StatelessWidget {
   const CourseSelectionPage({
@@ -73,10 +69,6 @@ class CourseSelectionPage extends StatelessWidget {
 
 enum _CourseSelectionView { search, timetable, settings }
 
-enum _CourseTypeFilter { all, required, elective }
-
-enum _VacancyFilter { all, available, full }
-
 class _CourseSelectionPageContent extends StatefulWidget {
   const _CourseSelectionPageContent({
     required this.controller,
@@ -101,17 +93,6 @@ class _CourseSelectionPageContent extends StatefulWidget {
 
 class _CourseSelectionPageContentState
     extends State<_CourseSelectionPageContent> {
-  static const _horizontalPadding = 16.0;
-  static const _wideLayoutMinWidth = 900.0;
-  static const _desktopWorkspaceMinWidth = 1100.0;
-  static const _desktopCoursePaneWidth = 520.0;
-  static const _maxSearchContentWidth = 1180.0;
-  static const _maxSheetWidth = 640.0;
-  static const _maxAdvancedFilterDialogWidth = 1080.0;
-  static const _maxCourseDetailsDialogWidth = 980.0;
-  static const _courseDetailsDialogHeight = 680.0;
-  static const _courseGridMaxExtent = 560.0;
-
   final CourseScheduleRepository _scheduleRepository =
       const StaticCourseScheduleRepository();
   final CourseShareCodec _shareCodec = const CourseShareCodec();
@@ -144,7 +125,8 @@ class _CourseSelectionPageContentState
         return LayoutBuilder(
           builder: (context, constraints) {
             final useDesktopWorkspace =
-                constraints.maxWidth >= _desktopWorkspaceMinWidth;
+                constraints.maxWidth >=
+                CourseSelectionLayout.desktopWorkspaceMinWidth;
             if (useDesktopWorkspace) {
               return _buildDesktopWorkspace(context, displayedCourses);
             }
@@ -152,7 +134,8 @@ class _CourseSelectionPageContentState
               context,
               displayedCourses,
               useDesktopCourseDetails:
-                  constraints.maxWidth >= _wideLayoutMinWidth,
+                  constraints.maxWidth >=
+                  CourseSelectionLayout.wideLayoutMinWidth,
             );
           },
         );
@@ -254,7 +237,7 @@ class _CourseSelectionPageContentState
       body: Row(
         children: [
           SizedBox(
-            width: _desktopCoursePaneWidth,
+            width: CourseSelectionLayout.desktopCoursePaneWidth,
             child: _buildCourseSearchView(
               displayedCourses,
               useDesktopCourseDetails: true,
@@ -287,7 +270,7 @@ class _CourseSelectionPageContentState
     required bool useDesktopDialog,
   }) {
     final snapshot = _visibleScheduleSnapshot();
-    return _CourseTimetableView(
+    return CourseTimetableView(
       snapshot: snapshot,
       totalCredits: _selectedTotalCredits,
       conflictSlotCount: _conflictSlotCount(snapshot),
@@ -369,7 +352,7 @@ class _CourseSelectionPageContentState
       unawaited(
         showDialog<void>(
           context: context,
-          builder: (context) => _CourseDetailsDialog(
+          builder: (context) => CourseDetailsDialog(
             course: course,
             supplementalDetail: widget.supplementalDetailRepository
                 .findBySerialNo(course.serialNo),
@@ -386,7 +369,7 @@ class _CourseSelectionPageContentState
         context: context,
         showDragHandle: true,
         isScrollControlled: true,
-        builder: (context) => _CourseDetailsSheet(
+        builder: (context) => CourseDetailsSheet(
           course: course,
           toggleCourseSelection: _toggleCourseSelection,
           isCourseSelected: _isCourseSelected,
@@ -412,7 +395,7 @@ class _CourseSelectionPageContentState
         context: context,
         showDragHandle: true,
         builder: (context) =>
-            _ScheduledCourseDetailsSheet(course: scheduledCourse),
+            ScheduledCourseDetailsSheet(course: scheduledCourse),
       ),
     );
   }
@@ -422,7 +405,7 @@ class _CourseSelectionPageContentState
     required bool useDialog,
   }) async {
     Widget buildContent(BuildContext context, {required bool useDialogLayout}) {
-      return _LocalCourseFilterSheet(
+      return LocalCourseFilterSheet(
         onlyShowTimetableCompatibleCourses: _onlyShowTimetableCompatibleCourses,
         onlyShowSelectedCourses: _onlyShowSelectedCourses,
         useDialogLayout: useDialogLayout,
@@ -430,20 +413,22 @@ class _CourseSelectionPageContentState
     }
 
     final nextValue = useDialog
-        ? await showDialog<_LocalCourseFilterState>(
+        ? await showDialog<LocalCourseFilterState>(
             context: context,
             builder: (context) {
               return Dialog(
                 clipBehavior: Clip.antiAlias,
                 insetPadding: const EdgeInsets.all(32.0),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: _maxSheetWidth),
+                  constraints: const BoxConstraints(
+                    maxWidth: CourseSelectionLayout.maxSheetWidth,
+                  ),
                   child: buildContent(context, useDialogLayout: true),
                 ),
               );
             },
           )
-        : await showModalBottomSheet<_LocalCourseFilterState>(
+        : await showModalBottomSheet<LocalCourseFilterState>(
             context: context,
             showDragHandle: true,
             builder: (context) {
@@ -808,21 +793,20 @@ class _CourseSearchView extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useGrid =
-            constraints.maxWidth >=
-            _CourseSelectionPageContentState._wideLayoutMinWidth;
+            constraints.maxWidth >= CourseSelectionLayout.wideLayoutMinWidth;
 
         return Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(
-              maxWidth: _CourseSelectionPageContentState._maxSearchContentWidth,
+              maxWidth: CourseSelectionLayout.maxSearchContentWidth,
             ),
             child: Column(
               children: [
-                _SearchPanel(
+                CourseSearchPanel(
                   controller: controller,
                   useAdvancedFilterDialog: useAdvancedFilterDialog,
                 ),
-                _ResultSummary(
+                CourseResultSummary(
                   controller: controller,
                   displayedCourseCount: displayedCourses.length,
                   localFilterActive: localFilterActive,
@@ -844,17 +828,17 @@ class _CourseSearchView extends StatelessWidget {
                             controller.courses.isEmpty)
                           SliverFillRemaining(
                             hasScrollBody: false,
-                            child: _ErrorState(
+                            child: CourseErrorState(
                               onRetry: () => unawaited(controller.search()),
                             ),
                           )
                         else if (displayedCourses.isEmpty)
                           const SliverFillRemaining(
                             hasScrollBody: false,
-                            child: _EmptyState(),
+                            child: CourseEmptyState(),
                           )
                         else if (useGrid)
-                          _CourseResultGrid(
+                          CourseResultGrid(
                             courses: displayedCourses,
                             isCourseSelected: isCourseSelected,
                             canSyncToTimetable: canSyncToTimetable,
@@ -862,7 +846,7 @@ class _CourseSearchView extends StatelessWidget {
                             onCourseSyncToggle: onCourseSyncToggle,
                           )
                         else
-                          _CourseResultList(
+                          CourseResultList(
                             courses: displayedCourses,
                             isCourseSelected: isCourseSelected,
                             canSyncToTimetable: canSyncToTimetable,
@@ -873,14 +857,12 @@ class _CourseSearchView extends StatelessWidget {
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(
-                                _CourseSelectionPageContentState
-                                    ._horizontalPadding,
+                                CourseSelectionLayout.horizontalPadding,
                                 4.0,
-                                _CourseSelectionPageContentState
-                                    ._horizontalPadding,
+                                CourseSelectionLayout.horizontalPadding,
                                 24.0,
                               ),
-                              child: _CoursePaginationControls(
+                              child: CoursePaginationControls(
                                 controller: controller,
                               ),
                             ),

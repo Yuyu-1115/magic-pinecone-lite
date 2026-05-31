@@ -1,7 +1,12 @@
-part of '../course_selection_page.dart';
+import 'package:flutter/material.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_layout.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/calendar_item.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_detail_row.dart';
 
-class _CourseTimetableView extends StatelessWidget {
-  const _CourseTimetableView({
+class CourseTimetableView extends StatelessWidget {
+  const CourseTimetableView({
+    super.key,
     required this.snapshot,
     required this.totalCredits,
     required this.conflictSlotCount,
@@ -468,8 +473,8 @@ class _PositionedScheduledCourse extends StatelessWidget {
   }
 }
 
-class _ScheduledCourseDetailsSheet extends StatelessWidget {
-  const _ScheduledCourseDetailsSheet({required this.course});
+class ScheduledCourseDetailsSheet extends StatelessWidget {
+  const ScheduledCourseDetailsSheet({super.key, required this.course});
 
   final ScheduledCourse course;
 
@@ -479,7 +484,7 @@ class _ScheduledCourseDetailsSheet extends StatelessWidget {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(
-            maxWidth: _CourseSelectionPageContentState._maxSheetWidth,
+            maxWidth: CourseSelectionLayout.maxSheetWidth,
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 24.0),
@@ -495,17 +500,17 @@ class _ScheduledCourseDetailsSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                _CourseDetailRow(
+                CourseDetailRow(
                   icon: Icons.category_outlined,
                   label: '類型',
                   value: course.category,
                 ),
-                _CourseDetailRow(
+                CourseDetailRow(
                   icon: Icons.place_outlined,
                   label: '地點',
                   value: course.location,
                 ),
-                _CourseDetailRow(
+                CourseDetailRow(
                   icon: Icons.schedule,
                   label: '節數',
                   value: '${course.length} 節',

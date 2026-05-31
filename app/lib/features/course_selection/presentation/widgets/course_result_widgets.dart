@@ -1,7 +1,14 @@
-part of '../course_selection_page.dart';
+import 'dart:async';
 
-class _CourseResultList extends StatelessWidget {
-  const _CourseResultList({
+import 'package:flutter/material.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/models/course_schedule_models.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_layout.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/view_models/course_selection_controller.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_card_widgets.dart';
+
+class CourseResultList extends StatelessWidget {
+  const CourseResultList({
+    super.key,
     required this.courses,
     required this.isCourseSelected,
     required this.canSyncToTimetable,
@@ -19,9 +26,9 @@ class _CourseResultList extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(
-        _CourseSelectionPageContentState._horizontalPadding,
+        CourseSelectionLayout.horizontalPadding,
         4.0,
-        _CourseSelectionPageContentState._horizontalPadding,
+        CourseSelectionLayout.horizontalPadding,
         20.0,
       ),
       sliver: SliverList.separated(
@@ -30,7 +37,7 @@ class _CourseResultList extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(height: 8.0),
         itemBuilder: (context, index) {
           final course = courses[index];
-          return _CourseListTile(
+          return CourseListTile(
             course: course,
             isSelected: isCourseSelected(course),
             canSyncToTimetable: canSyncToTimetable(course),
@@ -44,8 +51,9 @@ class _CourseResultList extends StatelessWidget {
   }
 }
 
-class _CourseResultGrid extends StatelessWidget {
-  const _CourseResultGrid({
+class CourseResultGrid extends StatelessWidget {
+  const CourseResultGrid({
+    super.key,
     required this.courses,
     required this.isCourseSelected,
     required this.canSyncToTimetable,
@@ -63,16 +71,15 @@ class _CourseResultGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(
-        _CourseSelectionPageContentState._horizontalPadding,
+        CourseSelectionLayout.horizontalPadding,
         4.0,
-        _CourseSelectionPageContentState._horizontalPadding,
+        CourseSelectionLayout.horizontalPadding,
         20.0,
       ),
       sliver: SliverGrid.builder(
         addAutomaticKeepAlives: false,
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent:
-              _CourseSelectionPageContentState._courseGridMaxExtent,
+          maxCrossAxisExtent: CourseSelectionLayout.courseGridMaxExtent,
           mainAxisExtent: 214.0,
           mainAxisSpacing: 8.0,
           crossAxisSpacing: 8.0,
@@ -80,7 +87,7 @@ class _CourseResultGrid extends StatelessWidget {
         itemCount: courses.length,
         itemBuilder: (context, index) {
           final course = courses[index];
-          return _CourseListTile(
+          return CourseListTile(
             course: course,
             isSelected: isCourseSelected(course),
             canSyncToTimetable: canSyncToTimetable(course),
@@ -94,8 +101,8 @@ class _CourseResultGrid extends StatelessWidget {
   }
 }
 
-class _CoursePaginationControls extends StatelessWidget {
-  const _CoursePaginationControls({required this.controller});
+class CoursePaginationControls extends StatelessWidget {
+  const CoursePaginationControls({super.key, required this.controller});
 
   final CourseSelectionController controller;
 
