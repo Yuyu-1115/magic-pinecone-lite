@@ -20,6 +20,7 @@ import 'package:magic_pinecone_course_demo/features/course_selection/presentatio
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_result_widgets.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_state_widgets.dart';
 import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/course_timetable_view.dart';
+import 'package:magic_pinecone_course_demo/features/course_selection/presentation/widgets/local_course_filter_sheet.dart';
 import 'package:magic_pinecone_course_demo/features/settings/presentation/settings_page.dart';
 import 'package:magic_pinecone_course_demo/features/settings/presentation/view_models/settings_view_model.dart';
 
