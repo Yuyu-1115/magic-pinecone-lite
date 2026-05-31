@@ -76,7 +76,7 @@ jobs:
         run: flutter test
 
       - name: Build web
-        run: flutter build web --release --wasm --base-href '/magic-pinecone-lite/'
+        run: flutter build web --release --base-href '/magic-pinecone-lite/'
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
