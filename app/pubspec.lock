@@ -725,7 +725,7 @@ packages:
     description:
       path: "."
       ref: "v0.0.2"
-      resolved-ref: d3ccf28dcea98fd0fc2c0ac47bbad5dba4f5bbcf
+      resolved-ref: a2b087fd0c00295aec3fc6212f16bc15cffceec4
       url: "https://github.com/Yuyu-1115/magic-pinecone-frontend.git"
     source: git
     version: "0.0.2"
