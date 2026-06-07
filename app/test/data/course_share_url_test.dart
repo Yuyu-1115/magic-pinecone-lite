@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:prototype/features/course_selection/data/course_share_url.dart';
+import 'package:magic_pinecone/features/course_selection/data/course_share_url.dart';
 
 void main() {
   test(

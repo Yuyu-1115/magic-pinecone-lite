@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:prototype/core/app/app_theme.dart';
-import 'package:prototype/core/app/app_providers.dart';
-import 'package:prototype/core/app/app_backend_config.dart';
-import 'package:prototype/features/course_selection/data/course_repository.dart';
-import 'package:prototype/features/course_selection/data/course_selection_storage.dart';
-import 'package:prototype/features/course_selection/data/course_share_codec.dart';
-import 'package:prototype/features/course_selection/data/course_supplemental_detail_catalog.dart';
-import 'package:prototype/features/course_selection/domain/models/course_detail_models.dart';
-import 'package:prototype/features/course_selection/domain/models/course_schedule_models.dart';
-import 'package:prototype/features/course_selection/presentation/lite_course_selection_page.dart';
-import 'package:prototype/features/course_selection/presentation/view_models/course_selection_controller.dart';
-import 'package:prototype/features/settings/data/settings_repository.dart';
-import 'package:prototype/features/settings/presentation/view_models/settings_view_model.dart';
+import 'package:magic_pinecone/core/app/app_theme.dart';
+import 'package:magic_pinecone/core/app/app_providers.dart';
+import 'package:magic_pinecone/core/app/app_backend_config.dart';
+import 'package:magic_pinecone/features/course_selection/data/course_repository.dart';
+import 'package:magic_pinecone/features/course_selection/data/course_selection_storage.dart';
+import 'package:magic_pinecone/features/course_selection/data/course_share_codec.dart';
+import 'package:magic_pinecone/features/course_selection/data/course_supplemental_detail_catalog.dart';
+import 'package:magic_pinecone/features/course_selection/domain/models/course_detail_models.dart';
+import 'package:magic_pinecone/features/course_selection/domain/models/course_schedule_models.dart';
+import 'package:magic_pinecone/features/course_selection/presentation/lite_course_selection_page.dart';
+import 'package:magic_pinecone/features/course_selection/presentation/view_models/course_selection_controller.dart';
+import 'package:magic_pinecone/features/settings/data/settings_repository.dart';
+import 'package:magic_pinecone/features/settings/presentation/view_models/settings_view_model.dart';
 
 void main() {
   testWidgets('shows the course selection app shell', (tester) async {

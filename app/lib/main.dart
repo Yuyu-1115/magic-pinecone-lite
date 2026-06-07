@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:prototype/core/app/app_providers.dart';
-import 'package:prototype/core/app/app_theme.dart';
-import 'package:prototype/features/course_selection/data/course_repository.dart';
-import 'package:prototype/features/course_selection/presentation/lite_course_selection_page.dart';
+import 'package:magic_pinecone/core/app/app_providers.dart';
+import 'package:magic_pinecone/core/app/app_theme.dart';
+import 'package:magic_pinecone/features/course_selection/data/course_repository.dart';
+import 'package:magic_pinecone/features/course_selection/presentation/lite_course_selection_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
