@@ -1,69 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:magic_pinecone_course_demo/core/app/app_theme.dart';
-import 'package:magic_pinecone_course_demo/features/course_selection/presentation/course_selection_page.dart';
-import 'package:magic_pinecone_course_demo/features/settings/data/settings_repository.dart';
-import 'package:magic_pinecone_course_demo/features/settings/presentation/view_models/settings_view_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:prototype/core/app/app_providers.dart';
+import 'package:prototype/core/app/app_theme.dart';
+import 'package:prototype/features/course_selection/data/course_repository.dart';
+import 'package:prototype/features/course_selection/presentation/lite_course_selection_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const CourseDemoApp());
+  runApp(
+    ProviderScope(
+      overrides: [
+        courseRepositoryProvider.overrideWith((ref) {
+          final dio = ref.watch(dioProvider);
+          return StaticRemoteCourseRepository(dio: dio);
+        }),
+      ],
+      child: const CourseDemoApp(),
+    ),
+  );
 }
 
-String? courseShareCodeFromUri(Uri uri) {
-  final shareCode = uri.queryParameters['c']?.trim();
-  if (shareCode == null || shareCode.isEmpty) return null;
-  return shareCode;
-}
-
-class CourseDemoApp extends StatefulWidget {
-  const CourseDemoApp({super.key, this.initialUri});
-
-  final Uri? initialUri;
+class CourseDemoApp extends ConsumerWidget {
+  const CourseDemoApp({super.key});
 
   @override
-  State<CourseDemoApp> createState() => _CourseDemoAppState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(appThemeControllerProvider).value;
 
-class _CourseDemoAppState extends State<CourseDemoApp> {
-  late final AppThemeController _themeController;
-  late final SettingsViewModel _settingsViewModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _themeController = AppThemeController();
-    _settingsViewModel = SettingsViewModel(
-      appThemeController: _themeController,
-      repository: const StaticSettingsRepository(),
-    );
-  }
-
-  @override
-  void dispose() {
-    _settingsViewModel.dispose();
-    _themeController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final initialShareCode = courseShareCodeFromUri(
-      widget.initialUri ?? Uri.base,
-    );
-
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: _themeController,
-      builder: (context, themeMode, _) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Magic Pinecone Lite',
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: themeMode,
-        home: CourseSelectionPage(
-          initialShareCode: initialShareCode,
-          settingsViewModel: _settingsViewModel,
-        ),
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Magic Pinecone Lite',
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
+      home: const LiteCourseSelectionPage(),
     );
   }
 }
